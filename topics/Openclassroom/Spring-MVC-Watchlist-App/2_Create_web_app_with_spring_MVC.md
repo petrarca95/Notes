@@ -323,6 +323,10 @@ Make sure thymeleaf is added to the namespace of the HTML document:
 
 ![](assets/markdown-img-paste-20191019191644811.png)
 
+- The id query parameter passed to the form view can be seen in the URL
+
+![](assets/markdown-img-paste-20191030181640336.png)
+
 - `@RequestMapping` is used to bind the query parameter to a method parameter that the handler method can use, here called id.
 - `required = false` is needed because when we click the tab "submit form", an HTTP GET request is made to `/watchlistItemForm` without query parameters (as specified in the `href` attribute `anchor tag` element in HTML of `watchlist.html` seen below)
 ![](assets/markdown-img-paste-20191019223421118.png)
@@ -448,3 +452,11 @@ Each custom validation has two components that need to be implemented together:
 ![](assets/markdown-img-paste-20191020122142487.png)
 
 ![](assets/markdown-img-paste-20191020122016459.png)
+
+## Cross-field & Cross-Record validation in your form
+- lets learn about cross field validation and cross record validation
+
+#### Working with cross-field validations
+- validation using two fields and comparing them to each another
+- by themselves the two fields may be valid but in conjunction they make up invalid data
+  - Ex: **_if rating>=8, priority should be medium or high_**
