@@ -1,9 +1,6 @@
-<<<<<<< Updated upstream
-# Getting started with Spring
-
-=======
 
 # Part 1: Foundational Topics of Building Spring Applications
+
 # Getting started with Spring
 - Chapter 1: overview of spring and springboot
 - Chapter 2: Spring MVC, how to present model data in browser, how to process and validate input
@@ -11,7 +8,6 @@
 - Chapter 4: Security
 - Chapter 5: Configuration properties, learning how to fine-tune autoconfigured beans, apply configuration properties to application components, and work with Spring profiles.
 
->>>>>>> Stashed changes
 ## What is Spring?
 - Any non trivial app is composed of many components each responsible for its own piece of the overall app's functionality, coordinating with other app elements to get the job done
 - when the app is run, the components somehow need to be created and introduced to each other
@@ -26,15 +22,10 @@ High level view of how Spring Works
 ![](assets/markdown-img-paste-20191106140521735.png)
 
 
-<<<<<<< Updated upstream
-### Main Idea of Dependency Injection
-- instead of having components create and maintain the lifecycle of other beans that they depend on, a dependency-injected application relies on a separate entity (the container) to create and maintain all components and inject those into the beans that need them.
-=======
 
 
 ### Main Idea of Dependency Injection
 - instead of having components create and maintain the lifecycle of other components that they depend on, a dependency-injected application relies on a separate entity (the container) to create and maintain all components and inject those into the beans that need them.
->>>>>>> Stashed changes
 - This injection is typically done through constructor arguments or property accessor
 
 Example:
@@ -45,11 +36,7 @@ Example:
 ### Three ways to tell the ApplicationContext (Container) to wire beans together (Inject beans)
 
   #### 1. XML
-<<<<<<< Updated upstream
-  - The older way to wire beans together was using one or more XML files that describe the components (beans) and their relationship to other
-=======
   - The older way to wire beans together was using one or more XML files that describe the components (beans) and their relationship to other beans
->>>>>>> Stashed changes
 
   Ex
 
