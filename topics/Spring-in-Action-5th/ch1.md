@@ -1,6 +1,6 @@
-#Getting started with Spring
+# Getting started with Spring
 
-##What is Spring?
+## What is Spring?
 - Any non trivial app is composed of many components each responsible for its own piece of the overall app's functionality, coordinating with other app elements to get the job done
 - when the app is run, the components somehow need to be created and introduced to each other
 - at its core, Spring offers a **container**, often referred to as the **Spring application context** that creates and manages these components of the app
@@ -8,7 +8,7 @@
 - the act of wiring beans together is based on a pattern known as **dependency injection**
 
 
-###Main Idea of Dependency Injection
+### Main Idea of Dependency Injection
 - instead of having components create and maintain the lifecycle of other beans that they depend on, a dependency-injected application relies on a separate entity (the container) to create and maintain all components and inject those into the beans that need them.
 - This injection is typically done through constructor arguments or property accessor
 
@@ -17,8 +17,9 @@ Example:
 ![](assets/markdown-img-paste-20191102122812835.png)
 
 
-###Three ways to tell the ApplicationContext (Container) to wire beans together (Inject beans)
-  ####1. XML
+### Three ways to tell the ApplicationContext (Container) to wire beans together (Inject beans)
+
+  #### 1. XML
   - The older way to wire beans together was using one or more XML files that describe the components (beans) and their relationship to other
 
   Ex
@@ -36,8 +37,9 @@ class="com.example.ProductService" />
 ```
 
 
-  ####2. Annotation (Java-based configuration)
+  #### 2. Annotation (Java-based configuration)
 - The following configuration class is equivalent to the XML configuration:
+
 ```Java
 @Configuration
 public class ServiceConfiguration {
@@ -59,7 +61,7 @@ public ProductService productService() {
   - _By default, the bean id is the name of the method_
 
 
-###Creating an ApplicationContext (container) that contains the beans in the class annotated with @Configuration and performing DI
+### Creating an ApplicationContext (container) that contains the beans in the class annotated with @Configuration and performing DI
 
 - `ApplicationContext` is an interface implemented by multiple classes
 - the `AnnotationConfigApplicationContext` implementation is used to create a container containing the beans in the configuration class
@@ -181,7 +183,7 @@ Java-based configuration offers greater type safety and improved refactorability
 
 
 
-####3. Automatic Configuration
+#### 3. Automatic Configuration
 - has its roots in spring techniques known as **autowiring** and **component scanning**
 - with **component scanning** spring can automatically discover components from an application's classpath and create them as beans in the spring container
 - With **autowiring** spring automatically injects the components with the other beans that they depend on
@@ -191,7 +193,7 @@ More information: https://www.mkyong.com/spring/spring-auto-scanning-components/
 
 
 
-##Review Questions:
+## Review Questions:
 
 Source for IoC, container (ApplicationContext), and DI: https://www.baeldung.com/inversion-control-and-dependency-injection-in-spring
 1. What is **Inversion Of Control** (IoC)
