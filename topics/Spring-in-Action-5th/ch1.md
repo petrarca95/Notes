@@ -422,12 +422,54 @@ https://dev.to/suin/spring-boot-developer-tools-how-to-enable-automatic-restart-
 Note: we are deferring DB functionality to focus on Spring MVC, we will refactor to add DB in chapter 3
 
 #### 2.1.1 Establishing the domain
-- an applications domain is the subject are it addressses--the ideas and concepts that influence the understanding of the app
+- an applications domain is the subject area it addresses. The ideas and concepts that influence the understanding of the app
 
-For this app:
+**For this app the domain includes:**
 - Tacos
 - Customer
 - Ingredients
 - Taco orders
 
 Let's define Taco ingredients:
+
+`Ingredient.java`
+
+```JAVA
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+@Data
+public class Ingredient {
+
+
+    private final String id;
+    private final String name;
+    private final Type type;
+
+
+    /**
+     *! @Data adds getters and setters for all variables
+     *! @Data also adds Constructor which has parameters for each final variable, which the compiler forces you to initialize either at declaration, in an initialization block, or at construction.
+     *! The equivalent constructor can be seen below
+
+     ** public Ingredient(String id, String name, Type type){
+     ** this.id = id;
+     **  this.name = name;
+     ** this.type =type;
+     **  }
+     */
+
+
+    public static enum Type{
+        WRAP,PROTEIN,VEGGIES, CHESSE,SAUCE
+    }
+
+}
+```
+
+#### 2.1.2 Creating a Controller
+- A controller handles HTTP requests
+- Common responses for controllers are a view name, or data in the body of a response (RESTful) a view name and data
+
+Lets create a webpage that has a list of the ingredients that we can choose from
+- To do this we need a controller to handle a `GET HTTP` request to the `/Design` URI
