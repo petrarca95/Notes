@@ -1,14 +1,14 @@
 
 # Part 1: Foundational Topics of Building Spring Applications
 
-# Getting started with Spring
+# Ch 1: Getting started with Spring
 - Chapter 1: overview of spring and springboot
 - Chapter 2: Spring MVC, how to present model data in browser, how to process and validate input
 - Chapter 3: Adding data persistence to the app
 - Chapter 4: Security
 - Chapter 5: Configuration properties, learning how to fine-tune autoconfigured beans, apply configuration properties to application components, and work with Spring profiles.
 
-## What is Spring?
+## 1.1 What is Spring?
 - Any non trivial app is composed of many components each responsible for its own piece of the overall app's functionality, coordinating with other app elements to get the job done
 - when the app is run, the components somehow need to be created and introduced to each other
 - The Spring container is at the core of the Spring framework, Spring offers a **container**, often referred to as the **Spring application context** that creates and manages these components of the app
@@ -53,6 +53,7 @@ class="com.example.ProductService" />
 ```
 
 
+
   #### 2. Annotation (Java-based configuration)
 - The following configuration class is equivalent to the XML configuration:
 
@@ -85,8 +86,6 @@ public ProductService productService() {
 - `ApplicationContext` is an interface implemented by multiple classes
 - the `AnnotationConfigApplicationContext` implementation is used to create a container containing the beans in the configuration class
 - `FileSystemXmlApplicationContext` and `ClassPathXmlApplicationContext` load bean definitions from an XML file
-<br>
-<br>
 <br>
 <br>
 
@@ -262,4 +261,173 @@ public class Store {
 
 
 
-   ## Initializing a Project using Spring Initializr
+## 1.2 Initializing a Project using Spring Initializr
+<br>
+
+
+#### Examining the Spring Project Structure
+
+
+![](assets/markdown-img-paste-2019110714403504.png)
+
+- The project has the typical Maven Structure
+- `mvnw` and `mvnw.cmd` are maven wrapper scripts , these can be use to build project even if maven is not installed.
+- `pom.xml`: describes your Project
+- `TacoCouldApplication.java`: the spring boot main class that boot straps the Project
+- `application.properties`: offers a place where you can specify configuration properties
+- `static`: a folder where you get any static content (images, stylesheets, js, etc)
+- `Templates`: folder containing template files that will be used to render content to browser. (files containing thymeleaf)
+- `TacoCouldApplicationTests.java`: a simple test class that ensures that the Spring application context loads successfully. More tests will be added as we develop the app.
+
+#### Exploring the pom.xml
+- Since we chose Maven as the build tool, a pom.xml file is generated
+
+![](assets/markdown-img-paste-2019110809423459.png)
+
+![](assets/markdown-img-paste-20191108094255256.png)
+
+#### `<packaging>`
+
+- The `<packaging` element specifies the output type of your project once it is build
+- traditional web apps are packaged as WAR
+- The choice of JAR is a cloud minded choice
+- WAR are suitable for deploying to a traditional Java app server, not a natural fit for most cloud platforms
+
+#### `<parent>`
+- This specifies that your project has spring-boot-starter-parent as its parent
+POM
+
+
+#### `<dependencies>`
+
+- You may also notice that all three dependencies have the word starter in their arti-
+fact ID. Spring Boot starter dependencies are special in that they typically don’t have
+any library code themselves, but instead transitively pull in other libraries
+
+#### `<build>`
+
+![](assets/markdown-img-paste-20191108095634672.png)
+
+
+#### TacoCouldApplication.java
+![](assets/markdown-img-paste-20191108095820964.png)
+
+- `@springBootApplication` made up of 3 tags:
+  - `@SpringBootConfiguration`
+      - a specialized version of @configuration. Designates this class as a configuration class. You can add java based configuration if you need to.
+  - `@EnableAutoConfiguration`
+    - Tells Spring boot to automatically configure any components it thinks you will need
+  - `@ComponentScan`
+    - enables component scanning **in the current package containing the @SpringBoot main class and its sub packages** allowing you to declare other classes with @Component, @Service, @Controller, etc. To have spring automatically discover them and register them as components in the Spring application context
+    - **Note: It is recommended that you locate your main application class in a root package above the component classes of the application**
+- `main()`
+  - the method that will be run when the JAR is executed
+
+## 1.3: Writing a Spring Application
+- let's add a homepage.
+- we need two things to make make our homepage function
+  - Controller class
+  - A view template
+
+#### 1.3.1 Handling web requests
+- Spring MVC is a web framework within Spring
+- core concept is a **_controller_**, a class that handles requests and responds with information.
+- Let's write a Controller that handles requests for the root URI "/"
+
+
+![](assets/markdown-img-paste-20191108103151385.png)
+
+- `@Controller`
+  - primary goal is to identify class as a component
+  - This allows the class to be identified as a component by Springs automatic scanning
+  - Other annotations such as @Component can be used instead, @Controller should be used because it is more restrictive
+- `@GetMapping("/")` or alternatively, `@RequestMapping(value='/', method = RequestMethod.GET)`
+  - defines the annotated method as a handler method capable of handling `GET` requests to the root URI
+- **Note, the handler method handles the GET request by returning the name of the view, we can use different libraries/frameworks to implement the view, we will use Thymeleaf**
+
+#### 1.3.2 Defining the view
+
+In the interest of keeping your homepage simple, it should do nothing more than wel-
+come users to the site. The next listing shows the basic Thymeleaf template that
+defines the Taco Cloud homepage.
+
+
+```HTML
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Taco Cloud</title>
+</head>
+<body>
+<h1>Welcome to...</h1>
+<img th:src="@{/images/TacoCloud.jpeg}"/>
+</body>
+</html>
+```
+
+- the `<img>` tag uses `th:src` attribute and an `@{..}` expression to reference the image with a context-relative path
+- **static content such as images should be kept in static directory**
+- lets define an images directory inside static and add our image to match the src thymeleaf attribute
+
+#### 1.3.3 Testing the Controller
+- Lets test two things
+
+1. the view name returned by the handler method in charge of handling GET requests to "/" returns a string with a value "index"
+2. the content of the response has the phrase "Welcome to..."
+
+
+#### 1.3.5 SprintBoot DevTools
+- follow steps in link below to integrate with IntelliJ
+https://dev.to/suin/spring-boot-developer-tools-how-to-enable-automatic-restart-in-intellij-idea-1c6i
+
+**Benefits:**
+- Automatic application restart when code changes
+- Automatic browser refresh (need to install an extension)
+- Automatic disable of template cache
+  - Cached templates are great for prod but not while developing
+  - Cached templates make it impossible to make changes while app is running and to see changes after refreshing browser
+- Built in H2 console
+  - http://localhost:8080/h2-console
+
+**Note:**
+- If new dependencies are included, we need to restart application
+
+
+**Automatic Browser refresh Extension installation:**
+- http://livereload.com/extensions/
+
+
+![](assets/markdown-img-paste-20191108144918216.png)
+
+![](assets/markdown-img-paste-20191108144928139.png)
+
+# Ch 2: Developing web Applications
+
+- In chapter one, we created an app that displays a static homepage webpage
+
+**Goals for Ch 2:**
+1. Need a page that displays ingredients for taco artists to choose from
+2. Ingredient choice may change, so can not be hardcoded, it should be fetched from a DB and handed over to the page to be displayed
+
+
+- Controller's job is to fetch and process data
+- View's job is to render data into HTML
+
+**We need:**
+- A domain class that defines a Taco
+- A controller that fetches ingredient info and passes it to the View
+- a View template that integrates that will have data fetched and be displayed to the browser
+
+Note: we are deferring DB functionality to focus on Spring MVC, we will refactor to add DB in chapter 3
+
+#### 2.1.1 Establishing the domain
+- an applications domain is the subject are it addressses--the ideas and concepts that influence the understanding of the app
+
+For this app:
+- Tacos
+- Customer
+- Ingredients
+- Taco orders
+
+Let's define Taco ingredients:
