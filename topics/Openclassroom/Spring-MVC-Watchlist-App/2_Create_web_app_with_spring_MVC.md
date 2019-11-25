@@ -457,6 +457,129 @@ Each custom validation has two components that need to be implemented together:
 - lets learn about cross field validation and cross record validation
 
 #### Working with cross-field validations
-- validation using two fields and comparing them to each another
+- _**validation using two fields and comparing them to each another**_
 - by themselves the two fields may be valid but in conjunction they make up invalid data
   - Ex: **_if rating>=8, priority should be medium or high_**
+- With cross-field validation, annotation created is **class level as opposed to a field level annotation**
+
+
+#### Working with cross-record validations
+- **_Cross record validation is when we compare a input field, to a previously saved field_**
+- We have to go back and check the rest of the data thats stored in our app
+- there is no annotation for this validations
+- we have to check the rules in the submission handler method form and add the error messages to the list
+- cross-field validations are treated as global errors so we can use same what we created for showing global messages in the HTML from the previous sections
+
+
+lets add a validation rule that states we can not add a movie if the title is already in the list
+steps to follow:
+1. add a method that checks the validation rule "does a title already exist?"
+2. add if statement in POST method to check POSTED title against titles already saved
+
+```java
+@RequestMapping(method = RequestMethod.POST, value ="/watchlistItemForm")
+  public ModelAndView submitWatchlistItems(@Valid WatchlistItem watchlistItem, BindingResult bindingResult){
+
+
+      if (bindingResult.hasErrors()){
+          //* how is the object bindingResults, which contains the error messages, getting sent to the view? apparently it is being sent implicitly since errors are correctly populating in the view
+          return new ModelAndView("watchlistItemForm");
+      }
+
+
+      if (itemAlreadyExistsValidation(watchlistItem.getTitle())){
+          //* rejectValue registers a field error for the specified field of the current object (probably the one that was annotated with @Valid) using the given error description, null is needed to make error a global one
+          bindingResult.rejectValue(null,"title", "this movie is already on your watchlist");
+          return new ModelAndView("watchlistItemForm");
+      }
+
+      //the rest is the same
+```
+
+
+#Configure Spring MVC
+- By adding `spring-boot-starter-web` we got a fully functional preconfigured Spring MVC project that would have needed a lot of setup without springboot
+- while spring boot does a lot for you, you have complete control over your apps
+- the default configurations can be overwritten
+
+
+## change the homepage configuration
+- by default, any file called `index.html` in `resource/templates` is treated as the homepage and will be served when we go to the root URI `/` without the need to write a root Controller
+- we can modify the default name of the homepage from `index.html` to anything else
+- We can also define that the hompage with the specified name we give it, will be served at whatever URI we specify, not only the root `/`
+- our goal is to rename `index.html` iwth `home.html`
+
+
+### how?
+1. Create a configuration class that implements `WebMvcConfigurer`
+2. Implement the addViewController method
+
+Ex:
+
+```java
+package com.openclassrooms.watchlist;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class MvcConfig implements WebMvcConfigurer{
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/home").setViewName("home.html");
+    }
+}
+```
+
+- here, our root/home page with the name `home.html`, will be served when `/home` and `/` are hit without the need to specify a handler method in a controller class for either the root or `/home`
+
+
+
+##Add a custom error page
+- even the most robust web apps face unexpected server side exceptions
+- its important to give users a good error and potential solutions when an exception occurs
+
+
+Default page when server side error occurs:
+
+![](assets/markdown-img-paste-20191124214610329.png)
+
+- our goal is to add a new page that appears when an error happens
+- for that, we need a **custom controller and custom error page**
+
+
+######Custom Controller
+- The controller should implement ErrorController
+- Create a Java class called  CustomErrorController and a  GET  request handler for it to handle the requests coming to  /error path.
+- add the `error.html` page to the project
+
+```java
+package com.openclassrooms.watchlist;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.boot.web.servlet.error.ErrorController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller
+public class CustomErrorController implements ErrorController {
+
+	@Override
+	public String getErrorPath() {
+		return "/error";
+	}
+
+	@GetMapping("/error")
+	public ModelAndView handleError(HttpServletRequest request) {
+
+		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+    	System.out.println("Error with status code " + status + " happened. Support! Do something about it!");
+	    return new ModelAndView("error");
+	}
+}
+```
