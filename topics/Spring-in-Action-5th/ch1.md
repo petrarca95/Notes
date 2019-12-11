@@ -606,6 +606,9 @@ add to `pom.xml`
 - Templates are just HTML with some additional element attributes that guide a template in rendering request data
 Ex:
 
+![](assets/markdown-img-paste-20191210204404458.png)
+
+
 
 
 ##### Thymeleaf Attributes
@@ -632,11 +635,146 @@ Ex:
 - Here, you use the `th:each` attribute on the <div> tag to repeat rendering of the `<div>`
 once for each item in the collection found in the wrap request attribute.
 - On each iteration, the ingredient item is bound to a Thymeleaf variable named ingredient
-- Inside the `<div>` element, there’s a check box `<input>` element and a `<span>` ele-
-ment to provide a label for the check box. The check box uses Thymeleaf’s `th:value`
-to set the rendered `<input>` element’s value attribute to the value found in the ingredient's id property.
-- The `<span>` element uses the proeprty `th:text` to replace the INGREDIENT placeholder with the value of the ingredients name property
+- Inside the `<div>` element, there’s a check box `<input>` element and a `<span>` element to provide a label for the check box. The check box uses Thymeleaf’s `th:value` to set the rendered `<input>` element’s value attribute to the value found in the ingredient's id property.
 
 
-##### Thymelead Operators
-- `${}` operator tells thymeleaf to use the value of a request attribute (in this case message)
+
+
+
+
+##### Whole HTML Template `Design.html` Document
+
+
+```HTML
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Taco Cloud</title>
+    <link rel="stylesheet" th:href="@{/styles.css}" />
+</head>
+<body>
+<h1>Design your taco!</h1>
+<img th:src="@{/images/TacoCloud.png}"/>
+
+<!--th:object is used to reference the command object that is backing this form, here, a Taco command object sent from /design GET
+Controller is reference by this attribute. This object will back the form
+-->
+<form method="POST" th:action ="@{/design}" th:object="${design}">
+    <div class="grid">
+        <div class="ingredient-group" id="wraps">
+            <h3>Designate your wrap:</h3>
+            <div th:each="ingredient : ${wrap}">
+                <input name="ingredients" type="checkbox" th:value="${ingredient.id}"
+                />
+                <span th:text="${ingredient.name}">INGREDIENT</span><br/>
+            </div>
+        </div>
+        <div class="ingredient-group" id="proteins">
+            <h3>Pick your protein:</h3>
+            <div th:each="ingredient : ${protein}">
+                <input name="ingredients" type="checkbox" th:value="${ingredient.id}"
+                />
+                <span th:text="${ingredient.name}">INGREDIENT</span><br/>
+            </div>
+        </div>
+        <div class="ingredient-group" id="cheeses">
+            <h3>Choose your cheese:</h3>
+            <div th:each="ingredient : ${cheese}">
+
+
+
+                <input name="ingredients" type="checkbox" th:value="${ingredient.id}"
+                />
+                <span th:text="${ingredient.name}">INGREDIENT</span><br/>
+            </div>
+        </div>
+        <div class="ingredient-group" id="veggies">
+            <h3>Determine your veggies:</h3>
+            <div th:each="ingredient : ${veggies}">
+                <input name="ingredients" type="checkbox" th:value="${ingredient.id}"
+                />
+                <span th:text="${ingredient.name}">INGREDIENT</span><br/>
+            </div>
+        </div>
+        <div class="ingredient-group" id="sauces">
+            <h3>Select your sauce:</h3>
+            <div th:each="ingredient : ${sauce}">
+                <input name="ingredients" type="checkbox" th:value="${ingredient.id}"
+                />
+                <span th:text="${ingredient.name}">INGREDIENT</span><br/>
+            </div>
+        </div>
+    </div>
+    <div>
+        <h3>Name your taco creation:</h3>
+        <input type="text" th:field="*{name}"/>
+        <br/>
+        <button>Submit your taco</button>
+    </div>
+</form>
+</body>
+</html>
+
+
+
+```
+
+##### Thymeleaf Operators
+- `${}` operator (also called variable expressions) tells thymeleaf to use the value of a request attribute (in this case message)
+  - They are executed on `model attributes` also called `context variables`
+  ![](assets/markdown-img-paste-20191210210422779.png)
+- `*{}` operator (also called a selectio expression), used to point to instance variables of the command objects
+  - just like variable expressions, except they will be executed on a previously selected object instead of the model attributes/request attributes
+   ![](assets/markdown-img-paste-20191210210450424.png)
+
+
+
+
+
+#### 2.2 Processing Form Submission
+- We need to `POST` the data in our form to a handler method capable of handling the submission
+- To do this, we include the following thymeleaf attributes
+`<form method="POST" th:action ="@{/design}" th:object="${design}">
+`
+- `th:action` specifies the URL and `method` the HTTP method
+
+
+##### Lets see how the data is POSTed from the form
+
+![](assets/markdown-img-paste-20191210220428770.png)
+
+- Note: we have two ingredients parameter showing in network tab, but I we can map/bind it to a `List<String>` in our command Taco object
+
+##### Lets create a handler method to Handle the POST request to `/design`
+
+```java
+@RequestMapping(method = RequestMethod.POST)
+   //* @ModelAttribute will bind parameters submitted via the form to instance variables in the Taco object (Used here as a Command object)
+   //* Where do we get the Taco object? If there is currently one in the Spring Container, from there, if not one is instantiated
+   public String processDesign(@ModelAttribute Taco tacoDesignoca){
+
+       return "orderForm";
+   }
+```
+
+- When the form is submitted the fields in the form (the data POSTED) are binded to the instance variables of a Taco object
+- From there, the `handler method` can do whatever it needs to do with the Taco object that was submitted
+
+
+`Taco.java`
+
+```JAVA
+
+package tacos;
+import java.util.List;
+import lombok.Data;
+
+@Data
+public class Taco {
+private String name;
+private List<String> ingredients;
+}
+
+```
