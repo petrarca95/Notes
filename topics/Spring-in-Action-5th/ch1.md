@@ -33,7 +33,7 @@ Example:
 ![](assets/markdown-img-paste-20191102122812835.png)
 
 
-### Three ways to tell the ApplicationContext (Container) to wire beans together (Inject beans)
+### Three ways to define/register beans in the Spring Container and to tell the ApplicationContext (Container) to wire beans together (Inject beans)
 
   #### 1. XML
   - The older way to wire beans together was using one or more XML files that describe the components (beans) and their relationship to other beans
@@ -81,7 +81,7 @@ public ProductService productService() {
 
 
 
-### Creating an ApplicationContext (container) that contains the beans in the class annotated with @Configuration and performing DI
+##### Creating an ApplicationContext (container) that contains the beans in the class annotated with @Configuration and performing DI
 
 - `ApplicationContext` is an interface implemented by multiple classes
 - the `AnnotationConfigApplicationContext` implementation is used to create a container containing the beans in the configuration class
@@ -197,7 +197,12 @@ number of products is 5
 
 
 
-Java-based configuration offers greater type safety and improved refactorability but _**EXPLICIT CONFIGURATION WITH EITHER JAVA OR XML IS ONLY NECESSARY IF SPRING IS UNABLE TO AUTOMATICALLY CONFIGURE THE COMPONENTS**_
+- Java-based configuration offers greater type safety and improved refactorability
+- _**EXPLICIT CONFIGURATION WITH EITHER JAVA OR XML IS ONLY NECESSARY IF SPRING IS UNABLE TO AUTOMATICALLY CONFIGURE THE COMPONENTS**_
+
+#####Note:
+
+- The class annotated with `@Confguration` does not always have to be manually loaded by AnnotationConfigApplicationContext , if Spring picks the Configuration class up via component scanning, then the beans defined will be automatically loaded into the container
 
 
 
@@ -207,6 +212,7 @@ Java-based configuration offers greater type safety and improved refactorability
 - with **component scanning** spring can automatically discover components from an application's classpath and create them as beans in the spring container
 - With **autowiring** spring automatically injects the components with the other beans that they depend on
 - `@Component` is used to indicate this class is an auto scan component
+
 
 More information: https://www.mkyong.com/spring/spring-auto-scanning-components/
 
@@ -225,7 +231,7 @@ Source for IoC, container (ApplicationContext), and DI: https://www.baeldung.com
 
 Traditional way of creating and setting/injecting a dependency:
 - Store objects have a dependency on Item objects
--In the example above, we need to instantiate an implementation of the Item interface within the Store class itself.
+- In the example above, we need to instantiate an implementation of the Item interface within the Store class itself.
 
 ```JAVA
 public class Store {
@@ -249,6 +255,8 @@ public class Store {
 ```
 - Now we do not have to hard code the specific implementation of the item interface
 - The specific implementation is defined in other places such as a .xml file or a class annotated with `@Configuration` which contains bean definitions
+- **This modification made the changed the relationship between the two classes from tightly to loosely coupled**
+- Now we can easily unit test
 
 3. What is a **Spring container**?
    - An entity in charge of the whole lifecycle of beans, such as instantiating, and wiring (injecting) beans together, and destroying them.
@@ -378,24 +386,32 @@ xmlns:th="http://www.thymeleaf.org">
 
 
 #### 1.3.5 SprintBoot DevTools
-- follow steps in link below to integrate with IntelliJ
-https://dev.to/suin/spring-boot-developer-tools-how-to-enable-automatic-restart-in-intellij-idea-1c6i
+
 
 **Benefits:**
-- Automatic application restart when code changes
-- Automatic browser refresh (need to install an extension)
-- Automatic disable of template cache
-  - Cached templates are great for prod but not while developing
-  - Cached templates make it impossible to make changes while app is running and to see changes after refreshing browser
-- Built in H2 console
+- https://spring.io/blog/2015/06/17/devtools-in-spring-boot-1-3
+1. Automatic application restart when code changes
+2. Automatic browser refresh (need to install an extension)
+3. Automatic disable of template cache
+     - Cached templates are great for prod but not while developing
+     - Cached templates make it impossible to make changes while app is running and to see changes after refreshing browser
+4. Built in H2 console
   - http://localhost:8080/h2-console
 
 **Note:**
 - If new dependencies are included, we need to restart application
 
 
-**Automatic Browser refresh Extension installation:**
-- http://livereload.com/extensions/
+**Automatic Browser refresh Extension installation and Template Cache Disable:**
+- Template caching property is automatically set to false when `Dev-Tools` are inlcuded
+- Before, we needed to manually modify This
+- To have automatic browser refresh/live reload in IntelliJ, we need to follow the next steps in the tutorial below
+
+https://dev.to/suin/spring-boot-developer-tools-how-to-enable-automatic-restart-in-intellij-idea-1c6i
+
+- We also need to download a chrome extension
+
+http://livereload.com/extensions/
 
 
 ![](assets/markdown-img-paste-20191108144918216.png)
@@ -419,12 +435,14 @@ https://dev.to/suin/spring-boot-developer-tools-how-to-enable-automatic-restart-
 - A controller that fetches ingredient info and passes it to the View
 - a View template that integrates that will have data fetched and be displayed to the browser
 
-Note: we are deferring DB functionality to focus on Spring MVC, we will refactor to add DB in chapter 3
+Note:
+- we are deferring DB functionality to focus on Spring MVC, we will refactor to add DB in chapter 3
+- For now, our controller is only responsible for providing the ingredients to the View
 
 #### 2.1.1 Establishing the domain
 - an applications domain is the subject area it addresses. The ideas and concepts that influence the understanding of the app
 
-**For this app the domain includes:**
+**For this app the domain includes objects such as:**
 - Tacos
 - Customer
 - Ingredients
@@ -439,6 +457,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @Data
+//* in book they added a @RequiredArgsConstructor annotation. Not needed because it is included in @Data
+
 public class Ingredient {
 
 
@@ -467,9 +487,156 @@ public class Ingredient {
 }
 ```
 
+- We are using lombok do generate getters, setters, Required argument constructor, and a couple other things
+
 #### 2.1.2 Creating a Controller
 - A controller handles HTTP requests
 - Common responses for controllers are a view name, or data in the body of a response (RESTful) a view name and data
+- Right now we focus on controllers that help views produce content
 
 Lets create a webpage that has a list of the ingredients that we can choose from
 - To do this we need a controller to handle a `GET HTTP` request to the `/Design` URI
+
+
+```java
+package sia.tacocloud;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Controller
+
+/*
+ ! when applied to the class, it designates the method handlers of this class
+ ! as methods that will handle any request to "/design", we can further refine which handlers handle what request
+ ! by adding more annotations to each method
+ */
+
+@RequestMapping("/design")
+public class DesignTacoController {
+
+    private ArrayList<Ingredient> ingredients = new ArrayList<>();
+
+    @RequestMapping(method = RequestMethod.GET)
+    public String showDesignForm(Model model) {
+
+        List<Ingredient> ingredients = Arrays.asList(
+                (new Ingredient("BEFF", "beef", Ingredient.Type.PROTEIN)),
+                (new Ingredient("CHICKEN", "chicken", Ingredient.Type.PROTEIN)),
+                (new Ingredient("CHED", "cheddar", Ingredient.Type.CHESSE)),
+                (new Ingredient("MOZ", "mozzarella", Ingredient.Type.CHESSE)),
+                (new Ingredient("LET", "letuce", Ingredient.Type.VEGGIES))
+
+        );
+
+        //* Get all types in a list
+        Ingredient.Type[] types = Ingredient.Type.values();
+        for (Ingredient.Type type : types) {
+            //* change the type to a string, add it to model as key value pair, where key is the name of the incredient type
+            //* the value is a List containing all ingredients of a specific type
+            model.addAttribute(type.toString().toLowerCase(),
+                    filterByType(ingredients, type));
+        }
+
+
+
+        model.addAttribute("ingredients", ingredients);
+
+        return "design";
+    }
+
+
+    private List<Ingredient> filterByType(List<Ingredient> ingredients, Ingredient.Type type) {
+        return ingredients.stream()
+                .filter(x -> x.getType().equals(type))
+                .collect(Collectors.toList());
+    }
+
+}
+
+
+```
+
+**When the method reaches `return`, `Model model` has the following data**
+![](assets/markdown-img-paste-2019120614254024.png)
+**Key Points**
+  - `@RequestMapping("/design")` at the class level states that the whole class will hanfle requests at `/design` we further add annotations to the methods for fine grain control
+- `Model model` object carries data to the View Template Engine, in charged of adding the data to the view for rendering
+- Ultimately, data is Model will be copied into servlet response attributes
+- The controller returns `"design"`, which is interpreted to be the name of the view to be rendered. The view resolver actually gets that view and passes it to the View Template Engine, The dispatcher Servlet passes the data to be combined with the view template.
+
+
+#### 2.1.3 Designing the view
+- after the controller is finisihed, it is time for the view to take action
+- We will use Thymeleaf as the View Template Engine
+
+add to `pom.xml`
+
+```xml
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+
+- At runtime, Spring Boot autoconfiguration will see Thymeleaf in the Classpath
+- SpringBoot will automatically create beans that support Thymeleaf views for Spring MVC
+
+##### View Libraries are decoupled from web frameworks
+
+- View Libraries suchs as Thymeleaf are designed to be decoupled from any particular framework
+- Therefore, view libraries are unable to work with data in `Model model`
+
+##### What happens to data in Model model
+- For view library to be decoupled, data in `Model model` needs to be copied to `servlet response attributes`
+- Thymeleaf and other Template Engines can work with these `servlet response`
+
+###### Thymeleaf Templates
+- Templates are just HTML with some additional element attributes that guide a template in rendering request data
+Ex:
+
+
+
+##### Thymeleaf Attributes
+1. `th:text`
+  -  If we had a request attribute whose key is `message` and we wanted to render the content in an HTML `<p>` tag by thymeleaf, we would write:
+  `<p th:text = "${message}"> placeholder message </p>`
+  - is a thymeleaf attribute that performs the replacement
+      - when the template is rendered, the body of the `<p>` element will be replaced with the value of the request attribute whose key is "message"
+2. `th:each`
+  - attribute that iterates over a collection of elements rendering the HTML once for each item
+  Ex: to render the list of wrap ingredients:
+3. `th:value`
+  - The check box uses Thymeleaf’s `th:value`
+  to set the rendered `<input>` element’s value attribute to the value found in the
+
+```html
+<h3>Designate your wrap:</h3>
+<div th:each="ingredient : ${wrap}">
+<input name="ingredients" type="checkbox" th:value="${ingredient.id}" />
+<span th:text="${ingredient.name}">INGREDIENT</span><br/>
+</div>
+```
+
+- Here, you use the `th:each` attribute on the <div> tag to repeat rendering of the `<div>`
+once for each item in the collection found in the wrap request attribute.
+- On each iteration, the ingredient item is bound to a Thymeleaf variable named ingredient
+- Inside the `<div>` element, there’s a check box `<input>` element and a `<span>` ele-
+ment to provide a label for the check box. The check box uses Thymeleaf’s `th:value`
+to set the rendered `<input>` element’s value attribute to the value found in the ingredient's id property.
+- The `<span>` element uses the proeprty `th:text` to replace the INGREDIENT placeholder with the value of the ingredients name property
+
+
+##### Thymelead Operators
+- `${}` operator tells thymeleaf to use the value of a request attribute (in this case message)
