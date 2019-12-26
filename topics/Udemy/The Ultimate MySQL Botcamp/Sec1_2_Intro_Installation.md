@@ -303,6 +303,7 @@ mysql>
 - Note no entry was inserted
 - I believe this happens only if strict mode is on
 `For data entry into a NOT NULL column that has no explicit DEFAULT clause, if an INSERT or REPLACE statement includes no value for the column [and if] strict SQL mode is enabled, an error occurs ..`
+- If strict mode is not on, i believe a warning will be logged
 
 
 ![](assets/markdown-img-paste-20191222203908450.png)
@@ -365,7 +366,7 @@ mysql>
 <br>
 
 ![](assets/markdown-img-paste-20191222205144932.png)
-- no, if we leave a field of an entry empty, it will be defaulted to the default value but of we do not explicitly include not null, there is nothing stopping SQL from inserting NULL with the following statement
+- no, if we leave a field of an entry empty, it will be defaulted to the default value but if we do not explicitly include not null, there is nothing stopping SQL from inserting NULL with the following statement
 
 ```SQL
 INSERT into table(name, age) VALUES('miguel',NULL);
@@ -378,7 +379,7 @@ Summary:
 
 <br>
 
-###Primary On Keys
+### Primer On Primary Keys
 
 ![](assets/markdown-img-paste-20191222211652377.png)
 
@@ -386,6 +387,8 @@ Summary:
 - This is a problem because we want our data to be uniquely identifiable
 - Each row needs to be unique
 - Each row represents a unique entity
+- A fundamental part of DBs is to have entries be identifiable
+- If we sign up for facebook, there is a reason why usernames are unique, there can not be two users with user name colt
 
 
 ![](assets/markdown-img-paste-20191222212254697.png)
@@ -393,7 +396,9 @@ Summary:
 
 ![](assets/markdown-img-paste-20191222212341446.png)
 
-##### How do we assign a column as a primary key in SQL?
+- We generally assign a field/column of a Table as a primary key, usually named `tablename_id`
+
+##### How do we assign a column as a primary key in SQL when we Create a Table?
 
 ```SQL
 CREATE TABLE unique_cats (cat_id INT NOT NULL,
@@ -405,7 +410,7 @@ CREATE TABLE unique_cats (cat_id INT NOT NULL,
 
 ```SQL
 
-mysql> INSERT INTO unqiue_cats(cat_id,name,age) VALUES(1,"fred",23);
+mysql> INSERT INTO unique_cats(cat_id,name,age) VALUES(1,"fred",23);
 ERROR 1146 (42S02): Table 'bakery.unqiue_cats' doesn't exist
 mysql> INSERT INTO unique_cats(cat_id,name,age) VALUES(1,"fred",23);
 Query OK, 1 row affected (0.00 sec)
@@ -419,9 +424,180 @@ mysql> SELECT * from unique_cats;
 1 row in set (0.00 sec)
 
 mysql> INSERT INTO unique_cats(cat_id,name,age) VALUES(1,"MIG",232);
-ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
+ERROR 1062 (23000): Duplicate entry '1' for key "PRIMARY"
 mysql>
+```
+
+Note:
+- we can not insert an entry with a duplicate value for whatever column was defined as a primary key
+<br>
+
+#### AUTO_INCREMENT
+- we can specify that the primary key is should be auto incremented
+- This allows us to not have to specify the primary key when inserting elements
+
+
+![](assets/markdown-img-paste-20191223175836322.png)
+
+```SQL
+mysql> select * from unique_cats2;                                   
++--------+--------+------+
+| cat_id | name   | age  |
++--------+--------+------+
+|      1 | Skippy |    4 |
+|      2 | Jiff   |    3 |
+|      3 | Jiff   |    3 |
+|      4 | Jiff   |    3 |
+|      5 | Skippy |    4 |
++--------+--------+------+
+ We can see that the primary key was auto incremented
+```
+
+`EXERCISE: Create an employees table with given fields`
+
+
+```SQL
+
+CREATE TABLE Employees(
+  id INT NOT NULL AUTO_INCREMENT,
+  last_name VARCHAR(20) NOT NULL,
+  first_name VARCHAR(20) NOT NULL,
+  middle_name VARCHAR(20),
+  age INT NOT NULL,
+  current_status VARCHAR(20) NOT NULL DEFAULT 'employed',
+  PRIMARY KEY(id)
+
+
+
+
+
+
+
+  mysql> DESC Employees;
++----------------+-------------+------+-----+----------+----------------+
+| Field          | Type        | Null | Key | Default  | Extra          |
++----------------+-------------+------+-----+----------+----------------+
+| id             | int(11)     | NO   | PRI | NULL     | auto_increment |
+| last_name      | varchar(20) | NO   |     | NULL     |                |
+| first_name     | varchar(20) | NO   |     | NULL     |                |
+| middle_name    | varchar(20) | YES  |     | NULL     |                |
+| age            | int(11)     | NO   |     | NULL     |                |
+| current_status | varchar(20) | NO   |     | employed |                |
++----------------+-------------+------+-----+----------+----------------+
+
+);
+
+```
+- we can also add PRIMARY KEY to line that specified id like this `... id INT NOT NULL AUTO_INCREMENT PRIMARY KEY`
+
+
+**Lets try to insert a record**
+```SQL
+mysql> INSERT INTO Employees(last_name, first_name,middle_name,age) VALUES ('miguel', 'petrarca', 'eduardo', 24);
+Query OK, 1 row affected (0.01 sec)
 
 ```
 
-Note: we can not insert an entry with a duplicate value for whatever column was defined as a primary key
+```SQL
+mysql> select * from Employees;
++----+-----------+------------+-------------+-----+----------------+
+| id | last_name | first_name | middle_name | age | current_status |
++----+-----------+------------+-------------+-----+----------------+
+|  1 | miguel    | petrarca   | eduardo     |  24 | employed       |
++----+-----------+------------+-------------+-----+----------------+
+1 row in set (0.00 sec)
+
+```
+
+###Section 5 CRUD Commands
+- CRUD
+  - Create
+  - Read
+  - Update
+  - Delete
+- The command commands we perform on data
+
+1) Create
+- we do this with `INSERT INTO`
+- This operation is review
+
+
+Lets focus on Read, Update, and Delete
+
+
+
+
+Lets start with a Clean slate by dropping the cats tables and creating a new one
+
+
+```SQL
+Let's drop the existing cats table:
+
+DROP TABLE cats;
+
+Recreate a new cats table:
+
+CREATE TABLE cats
+  (
+     cat_id INT NOT NULL AUTO_INCREMENT,
+     name   VARCHAR(100),
+     breed  VARCHAR(100),
+     age    INT,
+     PRIMARY KEY (cat_id)
+  );
+DESC cats;
+
+And finally insert some new cats:
+
+INSERT INTO cats(name, breed, age)
+VALUES ('Ringo', 'Tabby', 4),
+       ('Cindy', 'Maine Coon', 10),
+       ('Dumbledore', 'Maine Coon', 11),
+       ('Egg', 'Persian', 4),
+       ('Misty', 'Tabby', 13),
+       ('George Michael', 'Ragdoll', 9),
+       ('Jackson', 'Sphynx', 7);
+```
+<br>
+
+## Select (Read in CRUD)
+- `SELECT * FROM cats` to select all columns
+- `SELECT column_name1, column_name2, .... FROM cats`
+
+<br>
+
+#### Filtering / searching for specific data using `WHERE
+- not just used with `SELECT`
+- also user for `UPDATE`, `DELETE`, etc
+
+```SQL
+mysql> select * from cats where name="Egg";
++--------+------+---------+------+
+| cat_id | name | breed   | age  |
++--------+------+---------+------+
+|      4 | Egg  | Persian |    4 |
++--------+------+---------+------+
+1 row in set (0.00 sec)
+
+```
+
+- we could do `"EGG"` instead, this is not case sensitive by default
+
+#### Aliases
+- we can give aliases to column names, tables, whatelse?
+`SELECT cat_id AS id from cats`
+
+<br>
+
+## Update
+- update existing data
+
+Ex:
+`UPDATE cats SET breed='Shorthair' WHERE breed ="Tabby"`
+`UPDATE cats SET age = 14 WHERE name = 'Misty'`
+
+
+![](assets/markdown-img-paste-20191225210905959.png)
+
+- Core idea, use select first and double check it return expected data before updating or deleting
+- There are times where we would want to update all data in the table, in that case we do not use `WHERE`, but most of the time we want to update something specific
