@@ -1,8 +1,11 @@
-# What is a Database
+## What is a Database
 - A collection of data
 - A method for accessing and manipulating the data
 - A structured set of data with an interface
 
+
+## What is a Schema
+- a blueprint or outline of how the DB should be constructed
 
 An example of a "database" is a phone book.
 - With a phone book we can look up people
@@ -590,6 +593,7 @@ mysql> select * from cats where name="Egg";
 <br>
 
 ## Update
+
 - update existing data
 
 Ex:
@@ -599,5 +603,49 @@ Ex:
 
 ![](assets/markdown-img-paste-20191225210905959.png)
 
-- Core idea, use select first and double check it return expected data before updating or deleting
+- Core idea, use select first and double check expected data is returned before updating or deleting
 - There are times where we would want to update all data in the table, in that case we do not use `WHERE`, but most of the time we want to update something specific
+
+
+## Delete
+
+`DELETE FROM cats WHERE name = "Egg"`
+- Make sure that you have selected the correct entry before deleting
+
+```SQL
+mysql> select * from cats;
++--------+----------------+----------------+------+
+| cat_id | name           | breed          | age  |
++--------+----------------+----------------+------+
+|      1 | Ringo          | british soldie |    4 |
+|      2 | Cindy          | Maine Coon     |   12 |
+|      3 | Dumbledore     | Maine Coon     |   12 |
+|      4 | Egg            | Persian        |    4 |
+|      5 | Misty          | hi             |   14 |
+|      6 | George Michael | Ragdoll        |    9 |
+|      7 | jack           | Sphynx         |    7 |
++--------+----------------+----------------+------+
+7 rows in set (0.00 sec)
+
+mysql> delete from cats where name='egg';
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from cats;
++--------+----------------+----------------+------+
+| cat_id | name           | breed          | age  |
++--------+----------------+----------------+------+
+|      1 | Ringo          | british soldie |    4 |
+|      2 | Cindy          | Maine Coon     |   12 |
+|      3 | Dumbledore     | Maine Coon     |   12 |
+|      5 | Misty          | hi             |   14 |
+|      6 | George Michael | Ragdoll        |    9 |
+|      7 | jack           | Sphynx         |    7 |
++--------+----------------+----------------+------+
+6 rows in set (0.00 sec)
+
+Note that ids stay the same. They do not shift.
+
+```
+
+
+`DELETE from cats` deletes all cats (all the entries)

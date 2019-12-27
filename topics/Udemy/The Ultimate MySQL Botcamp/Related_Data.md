@@ -439,9 +439,202 @@ mysql>
 
 ```
 
-- Error occurs because we can not delete a customer if it is referenced by a foreign key in another
+- Error occurs because we can not delete a customer if it is referenced by a foreign key in another table
 - this is done by not letting us delete data willy nilly if it is referenced
 
 How can we delete a customer and all its associated orders? or, if we wanted to delete a book, how can we delete its associated reviews?
 - delete orders that refer to the customer we want to delete, then delete the customer
 - we could also get rid of the foreign key constraint (Bad idea!)
+- **We also will not be able to delete customers table because orders depends on it**
+
+<br>
+```SQL
+
+Lets say that  an app with customers and orders did not use a foreign-primary key constraint, so when customers left the app the associated orders stayed (this could not have happened with a pk-fk constraint since you can not delete customers if orders refer them). This scenario is recreated by tables below. App had up to 109 customers like we see.
+
+Lets see the orders that do not have matching customers
+
+mysql> CREATE TABLE orders(
+    ->     id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     order_date DATE,
+    ->     amount DECIMAL(8,2),
+    ->     customer_id INT
+    -> );
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> INSERT INTO customers (first_name, last_name, email)
+    -> VALUES ('Boy', 'George', 'george@gmail.com'),
+    ->        ('George', 'Michael', 'gm@gmail.com'),
+    ->        ('David', 'Bowie', 'david@gmail.com'),
+    ->        ('Blue', 'Steele', 'blue@gmail.com'),
+    ->        ('Bette', 'Davis', 'bette@aol.com');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql>        
+mysql> INSERT INTO orders (order_date, amount, customer_id)
+    -> VALUES ('2016/02/10', 99.99, 1),
+    ->        ('2017/11/11', 35.50, 1),
+    ->        ('2014/12/12', 800.67, 2),
+    ->        ('2015/01/03', 12.50, 2),
+    ->        ('1999/04/11', 450.25, 5);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> desc orders;
++-------------+--------------+------+-----+---------+----------------+
+| Field       | Type         | Null | Key | Default | Extra          |
++-------------+--------------+------+-----+---------+----------------+
+| id          | int(11)      | NO   | PRI | NULL    | auto_increment |
+| order_date  | date         | YES  |     | NULL    |                |
+| amount      | decimal(8,2) | YES  |     | NULL    |                |
+| customer_id | int(11)      | YES  |     | NULL    |                |
++-------------+--------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> desc customers;
++------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int(11)      | NO   | PRI | NULL    | auto_increment |
+| first_name | varchar(100) | YES  |     | NULL    |                |
+| last_name  | varchar(100) | YES  |     | NULL    |                |
+| email      | varchar(100) | YES  |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> INSERT INTO orders (order_date, amount, customer_id) VALUES
+    -> ('2017/11/05', 23.45, 45),
+    -> (CURDATE(), 777.77, 109);
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql>
+
+
+Lets view the left over orders that do not have an associated customer
+
+
+mysql> select first_name, last_name, amount, order_date from customers right join orders on customers.id=orders.customer_id;
++------------+-----------+--------+------------+
+| first_name | last_name | amount | order_date |
++------------+-----------+--------+------------+
+| Boy        | George    |  99.99 | 2016-02-10 |
+| Boy        | George    |  35.50 | 2017-11-11 |
+| George     | Michael   | 800.67 | 2014-12-12 |
+| George     | Michael   |  12.50 | 2015-01-03 |
+| Bette      | Davis     | 450.25 | 1999-04-11 |
+| NULL       | NULL      |  23.45 | 2017-11-05 |
+| NULL       | NULL      | 777.77 | 2019-12-26 |
++------------+-----------+--------+------------+
+7 rows in set (0.00 sec)
+
+
+```
+<br>
+
+### ON DELETE CASCADE
+- when we delete a parent (so a customer in customers) we also want the order associated with the customer to be deleted from orders table most of the time
+- **We can only do this if we define a pk-fk relationship when creating a table**
+- Without this, MySQL would not let us delete a customer that has an order associated with it
+
+```SQL
+-- WORKING WITH ON DELETE CASCADE
+
+CREATE TABLE customers(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(100)
+);
+
+CREATE TABLE orders(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_date DATE,
+    amount DECIMAL(8,2),
+    customer_id INT,
+    FOREIGN KEY(customer_id)
+        REFERENCES customers(id)
+        ON DELETE CASCADE
+);
+
+
+INSERT INTO customers (first_name, last_name, email)
+VALUES ('Boy', 'George', 'george@gmail.com'),
+       ('George', 'Michael', 'gm@gmail.com'),
+       ('David', 'Bowie', 'david@gmail.com'),
+       ('Blue', 'Steele', 'blue@gmail.com'),
+       ('Bette', 'Davis', 'bette@aol.com');
+
+INSERT INTO orders (order_date, amount, customer_id)
+VALUES ('2016/02/10', 99.99, 1),
+       ('2017/11/11', 35.50, 1),
+       ('2014/12/12', 800.67, 2),
+       ('2015/01/03', 12.50, 2),
+       ('1999/04/11', 450.25, 5);
+```
+
+
+
+```SQL
+--Visualizing tables
+
+mysql> select * from orders;
++----+------------+--------+-------------+
+| id | order_date | amount | customer_id |
++----+------------+--------+-------------+
+|  1 | 2016-02-10 |  99.99 |           1 |
+|  2 | 2017-11-11 |  35.50 |           1 |
+|  3 | 2014-12-12 | 800.67 |           2 |
+|  4 | 2015-01-03 |  12.50 |           2 |
+|  5 | 1999-04-11 | 450.25 |           5 |
++----+------------+--------+-------------+
+5 rows in set (0.00 sec)
+
+mysql> select * from customers;
++----+------------+-----------+------------------+
+| id | first_name | last_name | email            |
++----+------------+-----------+------------------+
+|  1 | Boy        | George    | george@gmail.com |
+|  2 | George     | Michael   | gm@gmail.com     |
+|  3 | David      | Bowie     | david@gmail.com  |
+|  4 | Blue       | Steele    | blue@gmail.com   |
+|  5 | Bette      | Davis     | bette@aol.com    |
++----+------------+-----------+------------------+
+5 rows in set (0.00 sec)
+
+--Looking at what i want to delete
+
+mysql> select * from customers where id=2;
++----+------------+-----------+--------------+
+| id | first_name | last_name | email        |
++----+------------+-----------+--------------+
+|  2 | George     | Michael   | gm@gmail.com |
++----+------------+-----------+--------------+
+1 row in set (0.00 sec)
+
+--Deleting
+
+mysql> delete from customers where id=2;
+Query OK, 1 row affected (0.01 sec)
+
+--Note how deleting a customer cascades to deleting the entries that have a foreign key that reference the deleted customer. We essentially delete the corresponding others that the customer has placed
+
+mysql> select * from orders;
++----+------------+--------+-------------+
+| id | order_date | amount | customer_id |
++----+------------+--------+-------------+
+|  1 | 2016-02-10 |  99.99 |           1 |
+|  2 | 2017-11-11 |  35.50 |           1 |
+|  5 | 1999-04-11 | 450.25 |           5 |
++----+------------+--------+-------------+
+3 rows in set (0.00 sec)
+
+mysql>
+
+```
+
+### Right and Left Join Quesions
+1) is there a difference between a right and left join if we switch table A and B that we are joining?
+
+A: No, you get the same data/content. Only the order of the columns changes
