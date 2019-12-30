@@ -1,4 +1,4 @@
-## Section 12: Related Tables (Data)
+## Section 12 and 13: Related Tables (Data)
 - So far the course has been on data in a table at a time
 - No data has been related so far
 - In the real world, we have Users, Likes, Followers, Comments, and many more tables
@@ -58,7 +58,7 @@ Ex:
 - Authors can have many books
 
 
-## 1:n Basics, The most Common Relationships
+## 1:n Basics, The most Common Relationship
 - lets start with an example, Customers and Orders (two tables)
 
 
@@ -83,7 +83,7 @@ Ex:
 **Solution: break data up**
 - we have two tables now
 - Orders have a field that references the Customer table
-- whatever the customer_id is of a given corresponds to a Customer that placed the order
+- whatever the customer_id is of a given order corresponds to the Customer that placed the order
 ![](assets/markdown-img-paste-20191223192318730.png)
 
 
@@ -634,7 +634,667 @@ mysql>
 
 ```
 
-### Right and Left Join Quesions
+### Right and Left Join Questions
 1) is there a difference between a right and left join if we switch table A and B that we are joining?
 
 A: No, you get the same data/content. Only the order of the columns changes
+
+<br>
+
+### Our first Join Exercises
+
+![](assets/markdown-img-paste-20191228112619142.png)
+- We see it is a one to many relationship students (1) : papers (n) and each paper (1) , in this case, is tied to a single student at minimum and most
+
+<br>
+
+First lets create the table following the schema defined above
+<br>
+
+**Task 1 : Now lets find out the students who submitted papers and their scores**
+![](assets/markdown-img-paste-20191228123353420.png)
+
+- it helps to first visualize the tables we have and now their relationships
+  - We can do this by using the `select * from table` statement to see data and `desc table` to see pk and fk
+
+Answer:
+```SQL
+
+mysql> SELECT first_name, title, grade
+    ->        from
+    ->    students  join papers
+    ->    on students.id = papers.student_id;
++------------+---------------------------------------+-------+
+| first_name | title                                 | grade |
++------------+---------------------------------------+-------+
+| Caleb      | My First Book Report                  |    60 |
+| Caleb      | My Second Book Report                 |    75 |
+| Samantha   | Russian Lit Through The Ages          |    94 |
+| Samantha   | De Montaigne and The Art of The Essay |    98 |
+| Carlos     | Borges and Magical Realism            |    89 |
++------------+---------------------------------------+-------+
+5 rows in set (0.00 sec)
+
+
+```
+- A `students RIGHT JOIN papers` would give the same result since every paper has to have a corresponding student_id
+- In other words, there aren't any papers that aren't associated with a student
+
+**Task 2 : Now lets see every single student and related scored, even if they did not submit a paper**
+
+Answer:
+```SQL
+
+mysql> SELECT first_name, title, grade
+    ->        from
+    ->    students  left join papers
+    ->    on students.id = papers.student_id;
+    +------------+---------------------------------------+-------+
+    | first_name | title                                 | grade |
+    +------------+---------------------------------------+-------+
+    | Caleb      | My First Book Report                  |    60 |
+    | Caleb      | My Second Book Report                 |    75 |
+    | Samantha   | Russian Lit Through The Ages          |    94 |
+    | Samantha   | De Montaigne and The Art of The Essay |    98 |
+    | Raj        | NULL                                  |  NULL |
+    | Carlos     | Borges and Magical Realism            |    89 |
+    | Lisa       | NULL                                  |  NULL |
+    +------------+---------------------------------------+-------+
+
+```
+
+**Task 3 : perform task 2 but sub nulls for 0's**
+
+```SQL
+
+SELECT first_name,IFNULL(title,"MISSING") AS title, IFNULL(grade,0) AS grade
+       from
+	   students left join papers
+	   on students.id = papers.student_id;
+
+     +------------+---------------------------------------+-------+
+     | first_name | title                                 | grade |
+     +------------+---------------------------------------+-------+
+     | Caleb      | My First Book Report                  |    60 |
+     | Caleb      | My Second Book Report                 |    75 |
+     | Samantha   | Russian Lit Through The Ages          |    94 |
+     | Samantha   | De Montaigne and The Art of The Essay |    98 |
+     | Raj        | MISSING                               |     0 |
+     | Carlos     | Borges and Magical Realism            |    89 |
+     | Lisa       | MISSING                               |     0 |
+
+
+```
+
+**Task 4 : print table with average grade for every student, if average is null, print 0**
+- we know it is not an inner join since we have all students shown
+- we know that we need to group by because we want averages for every student and a student may have multiple papers associated with them
+- we group by ID since it is a unique identifier of a student
+- We do not need to be explicit when saying `students.id and papers.student_id` since papers does not have an id column but it does not hurt
+
+```SQL
+
+mysql> select first_name, IFNULL(AVG(grade),0) AS average  
+from
+students left join papers
+on students.id = papers.student_id
+GROUP BY students.id;
++------------+---------+
+| first_name | average |
++------------+---------+
+| Caleb      | 67.5000 |
+| Samantha   | 96.0000 |
+| Raj        |  0.0000 |
+| Carlos     | 89.0000 |
+| Lisa       |  0.0000 |
++------------+---------+
+5 rows in set (0.00 sec)
+
+mysql>
+
+```
+
+
+**Task 5 :**
+
+![](assets/markdown-img-paste-20191228125507911.png)
+
+
+```SQL
+
+mysql> select first_name, IFNULL(AVG(grade),0) AS average, IF(AVG(grade) >75,"PASSING", "FAILING") AS passing_status
+from
+students left join papers
+on students.id = papers.student_id
+GROUP BY students.id;
+
++------------+---------+----------------+
+| first_name | average | passing_status |
++------------+---------+----------------+
+| Caleb      | 67.5000 | FAILING        |
+| Samantha   | 96.0000 | PASSING        |
+| Raj        |  0.0000 | FAILING        |
+| Carlos     | 89.0000 | PASSING        |
+| Lisa       |  0.0000 | FAILING        |
++------------+---------+----------------+
+
+mysql>
+
+```
+<br>
+
+## n:n Basics, Many to many relationships
+
+Examples:
+
+![](assets/markdown-img-paste-20191228143612295.png)
+- books can have multiple authors, and each of those authors can have many books
+- One student has multiple classes, and each class has multiple students
+
+<br>
+
+**Imagine we are building a tv show reviewing application.**
+
+key idea of app:
+- someone can sign up and be a reviewer to rate tv shows
+- Many reviewers can sign up
+- a reviewer can review many tv shows and a tv show can have many reviewers
+
+<br>
+#### Union/linking/ association table
+- so, our two entities are
+  - Reviewers
+  - Series
+
+But, for many to many relationships they are connected by a third table
+
+
+![](assets/markdown-img-paste-20191228150110161.png)
+- Series and reviewers exist on their own
+- But the two are associated through a Reviews table
+
+
+The reviews table will have information about the series id, the reviewer's id, and data such as rating, etc
+
+
+![](assets/markdown-img-paste-20191228150411720.png)
+- Reviews is a **union table**
+- Reviews table has an id (PK), a series_id (FK pointing to series table), and a reviewer_id (FK pointing to the Reviewers table)
+- Reviews on its own will be a ugly table to look at (just numbers)
+- Looking at it on its own will be confusing, we have to use Joins for things to make sense
+
+Example:
+
+![](assets/markdown-img-paste-2019122815082429.png)
+- Fargo has been rated twice, once by blue and once by wyatt
+
+
+So far we have discussed the schema, now lets create the actual tables
+
+```SQL
+
+mysql> CREATE TABLE reviewers(
+    -> id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    -> first_name VARCHAR(100),
+    -> last_name VARCHAR(100));
+Query OK, 0 rows affected (0.03 sec)
+
+
+
+mysql> CREATE table series(
+     id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+     title VARCHAR(100),
+     released_year YEAR(4),
+     genre VARCHAR(100))
+     ;
+Query OK, 0 rows affected (0.04 sec)
+
+
+
+
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rating DECIMAL(2,1),
+    series_id INT,
+    reviewer_id INT,
+    FOREIGN KEY(series_id) REFERENCES series(id),
+    FOREIGN KEY(reviewer_id) REFERENCES reviewers(id)
+);
+
+```
+
+After Insert the given Data, we have the following
+- We insert the data in the join table after inserting the data for the other two because it depends (references) the first two tables
+
+
+Lets see the tables:
+
+
+```SQL
+mysql> select * from series;
++----+-----------------------+---------------+-----------+
+| id | title                 | released_year | genre     |
++----+-----------------------+---------------+-----------+
+|  1 | Archer                |          2009 | Animation |
+|  2 | Arrested Development  |          2003 | Comedy    |
+|  3 | Bob's Burgers         |          2011 | Animation |
+|  4 | Bojack Horseman       |          2014 | Animation |
+|  5 | Breaking Bad          |          2008 | Drama     |
+|  6 | Curb Your Enthusiasm  |          2000 | Comedy    |
+|  7 | Fargo                 |          2014 | Drama     |
+|  8 | Freaks and Geeks      |          1999 | Comedy    |
+|  9 | General Hospital      |          1963 | Drama     |
+| 10 | Halt and Catch Fire   |          2014 | Drama     |
+| 11 | Malcolm In The Middle |          2000 | Comedy    |
+| 12 | Pushing Daisies       |          2007 | Comedy    |
+| 13 | Seinfeld              |          1989 | Comedy    |
+| 14 | Stranger Things       |          2016 | Drama     |
++----+-----------------------+---------------+-----------+
+14 rows in set (0.00 sec)
+
+
+
+mysql> select * from reviewers;
++----+------------+-----------+
+| id | first_name | last_name |
++----+------------+-----------+
+|  1 | Thomas     | Stoneman  |
+|  2 | Wyatt      | Skaggs    |
+|  3 | Kimbra     | Masters   |
+|  4 | Domingo    | Cortes    |
+|  5 | Colt       | Steele    |
+|  6 | Pinkie     | Petit     |
+|  7 | Marlon     | Crafford  |
++----+------------+-----------+
+7 rows in set (0.00 sec)
+
+
+mysql> select * from reviews;
++----+--------+-----------+-------------+
+| id | rating | series_id | reviewer_id |
++----+--------+-----------+-------------+
+|  1 |    8.0 |         1 |           1 |
+|  2 |    7.5 |         1 |           2 |
+|  3 |    8.5 |         1 |           3 |
+|  4 |    7.7 |         1 |           4 |
+|  5 |    8.9 |         1 |           5 |
+|  6 |    8.1 |         2 |           1 |
+|  7 |    6.0 |         2 |           4 |
+|  8 |    8.0 |         2 |           3 |
+|  9 |    8.4 |         2 |           6 |
+| 10 |    9.9 |         2 |           5 |
+| 11 |    7.0 |         3 |           1 |
+| 12 |    7.5 |         3 |           6 |
+| 13 |    8.0 |         3 |           4 |
+| 14 |    7.1 |         3 |           3 |
+| 15 |    8.0 |         3 |           5 |
+| 16 |    7.5 |         4 |           1 |
+| 17 |    7.8 |         4 |           3 |
+| 18 |    8.3 |         4 |           4 |
+| 19 |    7.6 |         4 |           2 |
+| 20 |    8.5 |         4 |           5 |
+| 21 |    9.5 |         5 |           1 |
+| 22 |    9.0 |         5 |           3 |
+| 23 |    9.1 |         5 |           4 |
+| 24 |    9.3 |         5 |           2 |
+| 25 |    9.9 |         5 |           5 |
+| 26 |    6.5 |         6 |           2 |
+| 27 |    7.8 |         6 |           3 |
+| 28 |    8.8 |         6 |           4 |
+| 29 |    8.4 |         6 |           2 |
+| 30 |    9.1 |         6 |           5 |
+| 31 |    9.1 |         7 |           2 |
+| 32 |    9.7 |         7 |           5 |
+| 33 |    8.5 |         8 |           4 |
+| 34 |    7.8 |         8 |           2 |
+| 35 |    8.8 |         8 |           6 |
+| 36 |    9.3 |         8 |           5 |
+| 37 |    5.5 |         9 |           2 |
+| 38 |    6.8 |         9 |           3 |
+| 39 |    5.8 |         9 |           4 |
+| 40 |    4.3 |         9 |           6 |
+| 41 |    4.5 |         9 |           5 |
+| 42 |    9.9 |        10 |           5 |
+| 43 |    8.0 |        13 |           3 |
+| 44 |    7.2 |        13 |           4 |
+| 45 |    8.5 |        14 |           2 |
+| 46 |    8.9 |        14 |           3 |
+| 47 |    8.9 |        14 |           4 |
++----+--------+-----------+-------------+
+47 rows in set (0.00 sec)
+```
+
+<br>
+
+##### Task 1: Get the ratings given by all reviewers for each series along with the name of the series
+- For this task, the columns we want are found in two tables so we only have to join these two tables
+- We only want to see the movies that have been rated and want to only see ratings associated with movies therefore we want an inner join
+
+
+```SQL
+mysql> select title, rating
+ from  
+ series inner join reviews  
+ on  series.id = reviews.series_id  
+ ORDER BY title ASC;
++----------------------+--------+
+| title                | rating |
++----------------------+--------+
+| Archer               |    7.5 |
+| Archer               |    8.0 |
+| Archer               |    8.9 |
+| Archer               |    8.5 |
+| Archer               |    7.7 |
+| Arrested Development |    8.1 |
+| Arrested Development |    6.0 |
+| Arrested Development |    8.0 |
+| Arrested Development |    8.4 |
+| Arrested Development |    9.9 |
+| Bob's Burgers        |    8.0 |
+| Bob's Burgers        |    8.0 |
+| Bob's Burgers        |    7.1 |
+| Bob's Burgers        |    7.5 |
+| Bob's Burgers        |    7.0 |
+| Bojack Horseman      |    7.5 |
+| Bojack Horseman      |    7.8 |
+| Bojack Horseman      |    8.3 |
+| Bojack Horseman      |    7.6 |
+| Bojack Horseman      |    8.5 |
+| Breaking Bad         |    9.9 |
+| Breaking Bad         |    9.3 |
+| Breaking Bad         |    9.0 |
+| Breaking Bad         |    9.5 |
+| Breaking Bad         |    9.1 |
+| Curb Your Enthusiasm |    6.5 |
+| Curb Your Enthusiasm |    7.8 |
+| Curb Your Enthusiasm |    8.8 |
+| Curb Your Enthusiasm |    8.4 |
+| Curb Your Enthusiasm |    9.1 |
+| Fargo                |    9.1 |
+| Fargo                |    9.7 |
+| Freaks and Geeks     |    8.8 |
+| Freaks and Geeks     |    9.3 |
+| Freaks and Geeks     |    7.8 |
+| Freaks and Geeks     |    8.5 |
+| General Hospital     |    5.5 |
+| General Hospital     |    6.8 |
+| General Hospital     |    5.8 |
+| General Hospital     |    4.3 |
+| General Hospital     |    4.5 |
+| Halt and Catch Fire  |    9.9 |
+| Seinfeld             |    8.0 |
+| Seinfeld             |    7.2 |
+| Stranger Things      |    8.5 |
+| Stranger Things      |    8.9 |
+| Stranger Things      |    8.9 |
++----------------------+--------+
+47 rows in set (0.00 sec)
+
+```
+<br>
+
+
+##### Task 2: Get the ratings given by all reviewers for each series along with the name of the series and also include the reviewers name and last name
+
+- For this task, we need to do two double joins because the information is spread among the three tables
+
+
+
+```SQL
+
+mysql> select title, rating, first_name, last_name  
+from  
+series inner join reviews  
+on  series.id = reviews.series_id
+inner join reviewers on reviewers.id = reviews.reviewer_id
+ORDER BY title ASC;
++----------------------+--------+------------+-----------+
+| title                | rating | first_name | last_name |
++----------------------+--------+------------+-----------+
+| Archer               |    7.5 | Wyatt      | Skaggs    |
+| Archer               |    8.0 | Thomas     | Stoneman  |
+| Archer               |    8.9 | Colt       | Steele    |
+| Archer               |    8.5 | Kimbra     | Masters   |
+| Archer               |    7.7 | Domingo    | Cortes    |
+| Arrested Development |    8.1 | Thomas     | Stoneman  |
+| Arrested Development |    6.0 | Domingo    | Cortes    |
+| Arrested Development |    8.0 | Kimbra     | Masters   |
+| Arrested Development |    8.4 | Pinkie     | Petit     |
+| Arrested Development |    9.9 | Colt       | Steele    |
+| Bob's Burgers        |    8.0 | Domingo    | Cortes    |
+| Bob's Burgers        |    8.0 | Colt       | Steele    |
+| Bob's Burgers        |    7.1 | Kimbra     | Masters   |
+| Bob's Burgers        |    7.5 | Pinkie     | Petit     |
+| Bob's Burgers        |    7.0 | Thomas     | Stoneman  |
+| Bojack Horseman      |    7.5 | Thomas     | Stoneman  |
+| Bojack Horseman      |    7.8 | Kimbra     | Masters   |
+| Bojack Horseman      |    8.3 | Domingo    | Cortes    |
+| Bojack Horseman      |    7.6 | Wyatt      | Skaggs    |
+| Bojack Horseman      |    8.5 | Colt       | Steele    |
+| Breaking Bad         |    9.9 | Colt       | Steele    |
+| Breaking Bad         |    9.3 | Wyatt      | Skaggs    |
+| Breaking Bad         |    9.0 | Kimbra     | Masters   |
+| Breaking Bad         |    9.5 | Thomas     | Stoneman  |
+| Breaking Bad         |    9.1 | Domingo    | Cortes    |
+| Curb Your Enthusiasm |    6.5 | Wyatt      | Skaggs    |
+| Curb Your Enthusiasm |    7.8 | Kimbra     | Masters   |
+| Curb Your Enthusiasm |    8.8 | Domingo    | Cortes    |
+| Curb Your Enthusiasm |    8.4 | Wyatt      | Skaggs    |
+| Curb Your Enthusiasm |    9.1 | Colt       | Steele    |
+| Fargo                |    9.1 | Wyatt      | Skaggs    |
+| Fargo                |    9.7 | Colt       | Steele    |
+| Freaks and Geeks     |    8.8 | Pinkie     | Petit     |
+| Freaks and Geeks     |    9.3 | Colt       | Steele    |
+| Freaks and Geeks     |    7.8 | Wyatt      | Skaggs    |
+| Freaks and Geeks     |    8.5 | Domingo    | Cortes    |
+| General Hospital     |    5.5 | Wyatt      | Skaggs    |
+| General Hospital     |    6.8 | Kimbra     | Masters   |
+| General Hospital     |    5.8 | Domingo    | Cortes    |
+| General Hospital     |    4.3 | Pinkie     | Petit     |
+| General Hospital     |    4.5 | Colt       | Steele    |
+| Halt and Catch Fire  |    9.9 | Colt       | Steele    |
+| Seinfeld             |    8.0 | Kimbra     | Masters   |
+| Seinfeld             |    7.2 | Domingo    | Cortes    |
+| Stranger Things      |    8.5 | Wyatt      | Skaggs    |
+| Stranger Things      |    8.9 | Kimbra     | Masters   |
+| Stranger Things      |    8.9 | Domingo    | Cortes    |
++----------------------+--------+------------+-----------+
+47 rows in set (0.00 sec)
+
+```
+
+<br>
+
+##### Task 3: Get the title of the movies and the average rating (average the ratings of all reviewers for each series)
+- we group by series.id or reviews.series_id because they are unique, if we risk grouping by name we run a risk that different series may posses the same name
+
+```SQL
+mysql> select title, AVG(rating) AS avg_rating  
+from  
+series join reviews on reviews.series_id = series.id  
+GROUP BY series.id
+ORDER BY avg_rating ASC;
++----------------------+------------+
+| title                | avg_rating |
++----------------------+------------+
+| General Hospital     |    5.38000 |
+| Bob's Burgers        |    7.52000 |
+| Seinfeld             |    7.60000 |
+| Bojack Horseman      |    7.94000 |
+| Arrested Development |    8.08000 |
+| Archer               |    8.12000 |
+| Curb Your Enthusiasm |    8.12000 |
+| Freaks and Geeks     |    8.60000 |
+| Stranger Things      |    8.76667 |
+| Breaking Bad         |    9.36000 |
+| Fargo                |    9.40000 |
+| Halt and Catch Fire  |    9.90000 |
++----------------------+------------+
+12 rows in set (0.00 sec)
+```
+<br>
+
+##### Task 4: Get the reviewers name and last name and each rating they gave
+```SQL
+
+mysql> select first_name, last_name, rating
+    -> from
+    -> reviewers join reviews
+    -> on reviewers.id = reviews.reviewer_id;
++------------+-----------+--------+
+| first_name | last_name | rating |
++------------+-----------+--------+
+| Thomas     | Stoneman  |    8.0 |
+| Thomas     | Stoneman  |    8.1 |
+| Thomas     | Stoneman  |    7.0 |
+| Thomas     | Stoneman  |    7.5 |
+| Thomas     | Stoneman  |    9.5 |
+| Wyatt      | Skaggs    |    7.5 |
+| Wyatt      | Skaggs    |    7.6 |
+| Wyatt      | Skaggs    |    9.3 |
+| Wyatt      | Skaggs    |    6.5 |
+| Wyatt      | Skaggs    |    8.4 |
+| Wyatt      | Skaggs    |    9.1 |
+| Wyatt      | Skaggs    |    7.8 |
+| Wyatt      | Skaggs    |    5.5 |
+| Wyatt      | Skaggs    |    8.5 |
+| Kimbra     | Masters   |    8.5 |
+| Kimbra     | Masters   |    8.0 |
+| Kimbra     | Masters   |    7.1 |
+| Kimbra     | Masters   |    7.8 |
+| Kimbra     | Masters   |    9.0 |
+| Kimbra     | Masters   |    7.8 |
+| Kimbra     | Masters   |    6.8 |
+| Kimbra     | Masters   |    8.0 |
+| Kimbra     | Masters   |    8.9 |
+| Domingo    | Cortes    |    7.7 |
+| Domingo    | Cortes    |    6.0 |
+| Domingo    | Cortes    |    8.0 |
+| Domingo    | Cortes    |    8.3 |
+| Domingo    | Cortes    |    9.1 |
+| Domingo    | Cortes    |    8.8 |
+| Domingo    | Cortes    |    8.5 |
+| Domingo    | Cortes    |    5.8 |
+| Domingo    | Cortes    |    7.2 |
+| Domingo    | Cortes    |    8.9 |
+| Colt       | Steele    |    8.9 |
+| Colt       | Steele    |    9.9 |
+| Colt       | Steele    |    8.0 |
+| Colt       | Steele    |    8.5 |
+| Colt       | Steele    |    9.9 |
+| Colt       | Steele    |    9.1 |
+| Colt       | Steele    |    9.7 |
+| Colt       | Steele    |    9.3 |
+| Colt       | Steele    |    4.5 |
+| Colt       | Steele    |    9.9 |
+| Pinkie     | Petit     |    8.4 |
+| Pinkie     | Petit     |    7.5 |
+| Pinkie     | Petit     |    8.8 |
+| Pinkie     | Petit     |    4.3 |
++------------+-----------+--------+
+
+```
+
+
+<br>
+
+##### Task 5: Identify unreviewed series
+- **Left join is needed because I need to list all series because I care about the ones without reviews**
+- where `ISNULL(rating)` will be used to filter, I tried `where rating = NULL` but it did not work
+- where `rating IS NULL` also works
+
+```SQL
+
+select title AS unreviewed_series
+from  series left join reviews
+on series.id = reviews.series_id
+where ISNULL(rating);
+
+```
+<br>
+##### Task 6: get average ratings for the various genres the series belong to
+
+```SQL
+
+mysql> select genre, ROUND(AVG(rating),2) AS avg_rating
+from  series join reviews
+on series.id = reviews.series_id
+group by genre;
++-----------+------------+
+| genre     | avg_rating |
++-----------+------------+
+| Animation |    7.86000 |
+| Comedy    |    8.16250 |
+| Drama     |    8.04375 |
++-----------+------------+
+3 rows in set (0.00 sec)
+
+```
+
+<br>
+
+##### Task 7: Analytics table
+
+IF(released_year > 2000, 'ACTIVE', 'INACTIVE') AS STATUS
+
+
+![](assets/markdown-img-paste-20191229182357158.png)
+
+
+
+Incorrect:
+```SQL
+mysql> select
+  first_name,
+  last_name,
+  IFNULL(AVG(reviews.rating),0) AS AVG,
+  IFNULL(COUNT(reviews.rating),0) AS COUNT,
+  IFNULL(MIN(reviews.rating),0) AS MIN,
+  IFNULL(MAX(reviews.rating),0) AS MAX,
+  IF(COUNT(reviews.rating)=0,'INACTIVE','ACTIVE') AS STATUS
+    from
+    reviewers left join reviews on reviewers.id = reviews.reviewer_id
+         left join series on series.id = reviews.series_id
+    group by
+    reviews.reviewer_id;
+ERROR 1055 (42000): Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'tv_review_app.reviewers.first_name' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+mysql>
+
+
+```
+
+Correct (grouping by reviewers.id instead)
+
+```SQL
+--Case statement more useful if we need more logic, maybe if we have power user, active, and inactive
+
+select
+  first_name,
+  last_name,
+  IFNULL(AVG(reviews.rating),0) AS AVG,
+  IFNULL(COUNT(reviews.rating),0) AS COUNT,
+  IFNULL(MIN(reviews.rating),0) AS MIN,
+  IFNULL(MAX(reviews.rating),0) AS MAX,
+  IF(COUNT(reviews.rating)=0,'INACTIVE','ACTIVE') AS STATUS
+from
+  reviewers left join reviews on reviewers.id = reviews.reviewer_id
+  left join series on series.id = reviews.series_id
+  group by reviewers.id;
+
+
+
+  +------------+-----------+---------+-------+------+------+----------+
+| first_name | last_name | AVG     | COUNT | MIN  | MAX  | STATUS   |
++------------+-----------+---------+-------+------+------+----------+
+| Thomas     | Stoneman  | 8.02000 |     5 |  7.0 |  9.5 | ACTIVE   |
+| Wyatt      | Skaggs    | 7.80000 |     9 |  5.5 |  9.3 | ACTIVE   |
+| Kimbra     | Masters   | 7.98889 |     9 |  6.8 |  9.0 | ACTIVE   |
+| Domingo    | Cortes    | 7.83000 |    10 |  5.8 |  9.1 | ACTIVE   |
+| Colt       | Steele    | 8.77000 |    10 |  4.5 |  9.9 | ACTIVE   |
+| Pinkie     | Petit     | 7.25000 |     4 |  4.3 |  8.8 | ACTIVE   |
+| Marlon     | Crafford  |    NULL |     0 | NULL | NULL | INACTIVE |
++------------+-----------+---------+-------+------+------+----------+
+7 rows in set (0.00 sec)
+
+
+```
