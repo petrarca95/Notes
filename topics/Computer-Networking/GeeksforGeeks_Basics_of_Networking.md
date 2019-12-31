@@ -19,3 +19,21 @@
 
 #### Few More Concepts
 - **DNS (Domain Name Server):** A server in charge of mapping domain name humans use into ip address
+
+
+
+#### Public vs Private IP addresses
+
+###### Public IP Addresses
+
+- `Public IP address` is assigned to router by ISP
+  - Router uses this IP address to interface/connect/communicate with other computers in the internet
+###### Private IP Addresses
+- assigned to computers in private network by Router
+- Router assigns `private/reserved IP addresses` to devices within your private network via `DHCP protocol`
+  - `private Ips` are how computers in the network communicate with each other and the router
+- Computers outside network can not communicate directly with local computers just by using their private addresses
+
+![](assets/markdown-img-paste-20191217130007231.png)
+
+![](assets/markdown-img-paste-20191217105306561.png)
