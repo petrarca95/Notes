@@ -537,7 +537,7 @@ public class MvcConfig implements WebMvcConfigurer{
 
 
 
-##Add a custom error page
+### Add a custom error page
 - even the most robust web apps face unexpected server side exceptions
 - its important to give users a good error and potential solutions when an exception occurs
 
@@ -550,7 +550,7 @@ Default page when server side error occurs:
 - for that, we need a **custom controller and custom error page**
 
 
-######Custom Controller
+###### Custom Controller
 - The controller should implement ErrorController
 - Create a Java class called  CustomErrorController and a  GET  request handler for it to handle the requests coming to  /error path.
 - add the `error.html` page to the project
@@ -583,3 +583,233 @@ public class CustomErrorController implements ErrorController {
 	}
 }
 ```
+<br>
+
+# Organize Your Application Code in Three-tier Architecture
+- Our app is not that big but it has already started looking quite messy
+- Figuring out where a particular functionality lies is difficult and will get worse
+
+<br>
+
+**Widely Accepted Solution:**
+- Three-Tier/Layer Architecture
+
+According to this architecture our code is divided into three separate layers with distinctive responsibilities
+
+![](assets/markdown-img-paste-20191230202930352.png)
+
+1. **Presentation Layer:** This layer is composed of the Model, View, and Controller
+2. **Business Logic Layer (Service Layer):** layer is made up of service classes and contain the bulk of the business logic for the application. Like making decisions, calculations, evaluations, and **processing the data passing between the other two layers.**
+3. **Data Access Layer:** This layer is responsible for interacting with databases directly to save, delete, update, and get data.
+
+![](assets/markdown-img-paste-20191230203429309.png)
+<br>
+### Three Tier architecture vs MVC pattern
+- **MVC** is concerned with **separating the presentation layer (UI)** into three components
+- **Three Layer Architecture** is concerned with **separating the WHOLE application**, not just the presentation layer
+
+<br>
+
+
+![](assets/markdown-img-paste-20191230203849470.png)
+- **The controller component of MVC is the connection point to the Service Layer**
+
+
+
+![](assets/markdown-img-paste-20191230204008544.png)
+
+
+![](assets/markdown-img-paste-20191230204030557.png)
+
+
+
+##### Lets Refactor!!
+- This mean changing the design of an app without changing its functionality
+- We will be refactoring our app into a three tier architecture without changing its functionality
+
+
+![](assets/markdown-img-paste-20191230204250370.png)
+
+
+![](assets/markdown-img-paste-2019123020462327.png)
+
+
+```Java
+package com.openclassrooms.watchlist.repository;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.openclassrooms.watchlist.domain.WatchlistItem;
+
+public class WatchlistRepository {
+	private List<WatchlistItem> watchlistItems = new ArrayList<WatchlistItem>();
+	private static int index = 1;
+
+	public List<WatchlistItem> getList(){
+		return watchlistItems;
+	}
+
+	public void addItem(WatchlistItem watchlistItem) {
+		watchlistItem.setId(index++);
+		watchlistItems.add(watchlistItem);
+	}
+
+	public WatchlistItem findById(Integer id) {
+		for (WatchlistItem watchlistItem : watchlistItems) {
+			if (watchlistItem.getId().equals(id)) {
+				return watchlistItem;
+			}
+		}
+		return null;
+	}
+
+	public WatchlistItem findByTitle(String title) {
+		for (WatchlistItem watchlistItem : watchlistItems) {
+			if (watchlistItem.getTitle().equals(title)) {
+				return watchlistItem;
+			}
+		}
+		return null;		
+	}
+}
+```
+![](assets/markdown-img-paste-20191230204703557.png)
+
+
+```Java
+package com.openclassrooms.watchlist.service;
+
+import java.util.List;
+
+import org.springframework.web.servlet.ModelAndView;
+
+import com.openclassrooms.watchlist.domain.WatchlistItem;
+import com.openclassrooms.watchlist.exception.DuplicateTitleException;
+import com.openclassrooms.watchlist.repository.WatchlistRepository;
+
+public class WatchlistService {
+
+	WatchlistRepository watchlistRepository = new WatchlistRepository();
+
+	public List<WatchlistItem> getWatchlistItems(){
+		return watchlistRepository.getList();
+	}
+
+	public int getWatchlistItemsSize() {
+		return watchlistRepository.getList().size();
+	}
+
+	public WatchlistItem findWatchlistItemById(Integer id) {
+		return watchlistRepository.findById(id);
+	}
+
+	public void addOrUpdateWatchlistItem(WatchlistItem watchlistItem) throws DuplicateTitleException {
+
+		WatchlistItem existingItem = findWatchlistItemById(watchlistItem.getId());
+
+		if (existingItem == null) {
+			if (watchlistRepository.findByTitle(watchlistItem.getTitle())!=null) {
+				throw new DuplicateTitleException();
+			}
+			watchlistRepository.addItem(watchlistItem);
+		} else {
+			existingItem.setComment(watchlistItem.getComment());
+			existingItem.setPriority(watchlistItem.getPriority());
+			existingItem.setRating(watchlistItem.getRating());
+			existingItem.setTitle(watchlistItem.getTitle());  
+		}
+	}
+}
+
+```
+
+![](assets/markdown-img-paste-20191230204800930.png)
+
+
+![](assets/markdown-img-paste-20191230204849293.png)
+
+
+```Java
+package com.openclassrooms.watchlist.controller;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.Valid;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
+
+import com.openclassrooms.watchlist.domain.WatchlistItem;
+import com.openclassrooms.watchlist.exception.DuplicateTitleException;
+import com.openclassrooms.watchlist.service.WatchlistService;
+
+@Controller
+public class WatchlistController {
+
+	private WatchlistService watchlistService = new WatchlistService();
+
+	@GetMapping("/watchlistItemForm")
+	public ModelAndView showWatchlistItemForm(@RequestParam(required = false) Integer id) {
+
+		String viewName = "watchlistItemForm";
+
+		Map<String,Object> model = new HashMap<String,Object>();
+
+		WatchlistItem watchlistItem = watchlistService.findWatchlistItemById(id);
+
+		if (watchlistItem == null) {
+			model.put("watchlistItem", new WatchlistItem());
+		} else {
+			model.put("watchlistItem", watchlistItem);
+		}
+		return new ModelAndView(viewName,model);
+	}
+
+	@PostMapping("/watchlistItemForm")
+	public ModelAndView submitWatchlistItemForm(@Valid WatchlistItem watchlistItem,
+			BindingResult bindingResult) {
+
+		if (bindingResult.hasErrors()) {
+			return new ModelAndView("watchlistItemForm");
+		}
+
+		try {
+			watchlistService.addOrUpdateWatchlistItem(watchlistItem);
+		} catch (DuplicateTitleException e) {
+			bindingResult.rejectValue("title", "", "This title already exists on your watchlist");
+			return new ModelAndView("watchlistItemForm");
+		}
+
+		RedirectView redirect = new RedirectView();
+		redirect.setUrl("/watchlist");
+
+		return new ModelAndView(redirect);
+	}
+
+	@GetMapping("/watchlist")
+	public ModelAndView getWatchlist() {
+
+		String viewName= "watchlist";
+
+		Map<String,Object> model = new HashMap<String,Object>();
+
+		model.put("watchlistItems", watchlistService.getWatchlistItems());
+		model.put("numberOfMovies", watchlistService.getWatchlistItemsSize());
+
+		return new ModelAndView(viewName,model);		
+	}
+}
+
+```
+
+![](assets/markdown-img-paste-2019123020494882.png)
+![](assets/markdown-img-paste-20191230204959609.png)
+![](assets/markdown-img-paste-20191230205009900.png)
+![](assets/markdown-img-paste-20191230205018924.png)
