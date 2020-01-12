@@ -50,7 +50,7 @@ Ex:
 - books have many reviews but reviews belong to one book
 
 
-#### n:n relationship
+#### n:m relationship
 
 Ex:
 - two entities, Books and Authors
@@ -1295,6 +1295,4 @@ from
 | Marlon     | Crafford  |    NULL |     0 | NULL | NULL | INACTIVE |
 +------------+-----------+---------+-------+------+------+----------+
 7 rows in set (0.00 sec)
-
-
 ```
