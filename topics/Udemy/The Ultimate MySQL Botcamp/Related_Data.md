@@ -1298,3 +1298,14 @@ from
 
 
 ```
+<br>
+
+## Group By
+- Used to condense groups into one and perform aggregate functions (AVG, SUM, MIN) on attributes that belong to these groups
+- Always group by column that does not have repeating values like reviewers.id above (Primary Key)
+- Select clause can only contain aggregate functions performed on a column, for example, AVG(Rating), and columns that are functionally dependent on the column in the group by clause
+  - Ex: first name is functionally dependent on reviewer.id, papers.title is not
+  - If we condense all reviews into groups with unique id (group by reviewer.id) then it makes sense for us to be able to select first_name since first_name depends on reviewer.id but not the title of the paper/papers submitted by reviewers
+
+![](assets/markdown-img-paste-20191231114803982.png)
+- reviewers.id uniquely determines reviewers.first_name but does not uniquely determine papers.title since a reviewer defined by (reviewer.id) can have multiple papers with various titles

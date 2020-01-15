@@ -813,3 +813,83 @@ public class WatchlistController {
 ![](assets/markdown-img-paste-20191230204959609.png)
 ![](assets/markdown-img-paste-20191230205009900.png)
 ![](assets/markdown-img-paste-20191230205018924.png)
+
+
+# Make Services Unit Testable Using Dependency Injection
+- Unit testing is key to the maintenance of an app
+- In unit testing, a method is tested at a time
+- All other classes/dependencies and methods of the same class should be mocked
+- **This means that at the time of testing, we have to isolate the class under test (CUT)**
+- Service classes contains most of the business logic therefore, most tests will be written for the classes
+  - **The problem is that they have dependencies on repository classes (DAL) and other services**
+<br>
+## Tight Coupling vs Loose Coupling
+- Tight coupling occurs when we use the new operator, which instantiates a specific class (implementation of an interface, if we are coding to an interface)
+
+**Ex:**
+
+lets say we want to unit test the method `getWatchlistItems()` from of the `WatchlistService` class. Which is calling methods from two other classes: `watchlistRepository.getList()` and `movieRatingService.getMovieRating(..)`
+
+```JAVA
+public List<WatchlistItem> getWatchlistItems() {
+  List<WatchlistItem> watchlistItems = watchlistRepository.getList();
+
+  for (WatchlistItem watchlistItem : watchlistItems) {
+    Optional<String> movieRating = movieRatingService.getMovieRating(watchlistItem.getTitle());
+    if (movieRating.isPresent()) {
+      watchlistItem.setRating(movieRating.get());
+    }
+  }
+  return watchlistItems;
+}
+```
+- in order to unit test this method we have to mock out the CUT's dependencies
+- We see that the method uses `getList()` of the `WatchlistRepository` class and `getMovieRating()` of the `MovieRatingService` class, so we need to mock theses classes.
+
+**We want a real instance of `WatchlistService` which contains mocked dependencies, as opposed to real instances.**
+<br>
+<br>
+
+***Here is the problem with the current Design of `WatchlistService.java`:***
+
+![](assets/markdown-img-paste-20191231142805558.png)
+- Loose coupling between a class and its dependencies occurs when a class is not tied to a specific implementation of its dependencies, so these dependencies are easily swapped. When unit testing, a mock can be injected into the dependency, or maybe we can inject various implementations depending on conditions like the environment. A real implementation of an interface can be injected during PROD and a dummy implementation of an interface during DEV
+
+***Solution: Loose Coupling by programming to an Interface, and DI carried out by an IoC Cotainer***
+![](assets/markdown-img-paste-20191231143145533.png)
+
+
+### Lets Refactor for DI
+
+![](assets/markdown-img-paste-20191231144958385.png)
+![](assets/markdown-img-paste-20191231145014141.png)
+
+- Now we can easily Unit test any class with dependencies!
+
+### Unit Test with DI
+
+![](assets/markdown-img-paste-20191231145429831.png)
+![](assets/markdown-img-paste-20191231145443614.png)
+![](assets/markdown-img-paste-2019123114550813.png)
+
+![](assets/markdown-img-paste-20191231145601844.png)
+
+
+### Fix Current Controller Test
+![](assets/markdown-img-paste-20191231145845557.png)
+
+![](assets/markdown-img-paste-20191231145934607.png)
+
+
+## Configure Your Spring Beans via XML and Java
+
+![](assets/markdown-img-paste-20191231150115316.png)
+
+
+### XML Configuration
+![](assets/markdown-img-paste-2019123115015640.png)
+
+![](assets/markdown-img-paste-20191231150221308.png)
+
+### Java Configuration
+![](assets/markdown-img-paste-2019123115044560.png)
