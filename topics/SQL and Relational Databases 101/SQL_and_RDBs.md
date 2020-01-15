@@ -1,5 +1,5 @@
 ## Entity-relationship Model/Diagram
-- This model proposes thinking of a DB as a collection of enitites, each with their attributes
+- This model proposes thinking of a DB as a collection of entities, each with their attributes
 - a tool used in DB design
 - Entities are Nouns important to the business domain
 - Entities have attributes
