@@ -702,3 +702,71 @@ VALUES
   ("purple", "polo", "M", 50);
 
 ```
+#### Get All Data with a Single Line, get all shirts but only print out article and color, select all medium shirts (print everything except id)
+```SQL
+SELECT * FROM shirts;
+
+
+mysql> select article, color from shirts;
+
+
+
+mysql> select article, color, shirt_size, last_worn from shirts where shirt_size='M';
++------------+--------+------------+-----------+
+| article    | color  | shirt_size | last_worn |
++------------+--------+------------+-----------+
+| polo shirt | black  | M          |        10 |
+| polo shirt | red    | M          |         5 |
+| tank top   | blue   | M          |        15 |
+| polo       | purple | M          |        50 |
++------------+--------+------------+-----------+
+4 rows in set (0.00 sec)
+
+
+
+```
+#### Update all polo to size L
+
+```SQL
+update shirts
+set shirt_size = 'L'
+where article = 'polo shirt';
+```
+#### Update the shirt last worn 15 days ago to 0
+```SQL
+update shirts
+set last_worn = 0
+where last_worn=15;
+```
+
+![](assets/markdown-img-paste-20200118180346900.png)
+
+```SQL
+mysql> update shirts set shirt_size = 'xs', color ='off white'
+where color ='white';
+```
+
+![](assets/markdown-img-paste-20200118180422197.png)
+
+```SQL
+
+delete from shirts where last_worn = 200;
+
+```
+![](assets/markdown-img-paste-20200118180631375.png)
+```SQL
+delete from shirts where article ='tank top';
+```
+
+![](assets/markdown-img-paste-20200118180707887.png)
+
+```SQL
+mysql> delete from shirts;
+
+```
+
+![](assets/markdown-img-paste-20200118180744465.png)
+
+```SQL
+drop table shirts;
+```

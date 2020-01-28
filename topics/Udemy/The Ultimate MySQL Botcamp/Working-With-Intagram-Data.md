@@ -546,7 +546,7 @@ limit 5;
 ```
 <br>
 
-#### Seventh Challenge
+#### Seventh Challenge (Having Clause)
 
 ![](assets/markdown-img-paste-20200115210229238.png)
 
