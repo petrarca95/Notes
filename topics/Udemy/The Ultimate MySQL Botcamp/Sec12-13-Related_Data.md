@@ -1,4 +1,4 @@
-## Section 12 and 13: Related Tables (Data)
+##### Section 12 and 13: Related Tables (Data)
 - So far the course has been on data in a table at a time
 - No data has been related so far
 - In the real world, we have Users, Likes, Followers, Comments, and many more tables
@@ -401,7 +401,8 @@ ORDER BY total_spent;
 
 
 
-##### Revisiting Customer and Orders tables
+#### Deleting Customer Constrained by FK
+- Lets Revisit Customer and Orders tables
 - What happens if we try to delete a customer, lets say Boy George
 
 
@@ -443,7 +444,7 @@ mysql>
 - this is done by not letting us delete data willy nilly if it is referenced
 
 How can we delete a customer and all its associated orders? or, if we wanted to delete a book, how can we delete its associated reviews?
-- delete orders that refer to the customer we want to delete, then delete the customer
+- delete orders that refer to the customer we want to delete, then delete the customer (meh idea)
 - we could also get rid of the foreign key constraint (Bad idea!)
 - **We also will not be able to delete customers table because orders depends on it**
 
@@ -533,7 +534,7 @@ mysql> select first_name, last_name, amount, order_date from customers right joi
 ```
 <br>
 
-### ON DELETE CASCADE
+#### ON DELETE CASCADE
 - when we delete a parent (so a customer in customers) we also want the order associated with the customer to be deleted from orders table most of the time
 - **We can only do this if we define a pk-fk relationship when creating a table**
 - Without this, MySQL would not let us delete a customer that has an order associated with it
