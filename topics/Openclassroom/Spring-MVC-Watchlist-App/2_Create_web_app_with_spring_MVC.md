@@ -535,60 +535,72 @@ public class MvcConfig implements WebMvcConfigurer{
 
 - here, our root/home page with the name `home.html`, will be served when `/home` and `/` are hit without the need to specify a handler method in a controller class for either the root or `/home`
 
+<br>
 
+## Custom Error Pages
+Note: I believe the course does not have correct info because with springboot, if we place a file called 'error.html' in `\resources` it will be displayed when there are any errors without the need to write a class an implement `ErrorController` interface like below.
 
-### Add a custom error page
-- even the most robust web apps face unexpected server side exceptions
-- its important to give users a good error and potential solutions when an exception occurs
-
-
-Default page when server side error occurs:
-
-![](assets/markdown-img-paste-20191124214610329.png)
-
-- our goal is to add a new page that appears when an error happens
-- for that, we need a **custom controller and custom error page**
-
-
-###### Custom Controller
-- The controller should implement ErrorController
-- Create a Java class called  CustomErrorController and a  GET  request handler for it to handle the requests coming to  /error path.
-- add the `error.html` page to the project
-
-```java
-package com.openclassrooms.watchlist;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.boot.web.servlet.error.ErrorController;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.servlet.ModelAndView;
+```Java
 
 @Controller
+@Slf4j
 public class CustomErrorController implements ErrorController {
 
-	@Override
-	public String getErrorPath() {
-		return "/error";
-	}
+   @Override
+   public String getErrorPath() {
+       System.out.println("hi");
+       return "/error";
+   }
 
-	@GetMapping("/error")
-	public ModelAndView handleError(HttpServletRequest request) {
+   @GetMapping("/error")
+   public ModelAndView handleError(HttpServletRequest request) {
 
-		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-    	System.out.println("Error with status code " + status + " happened. Support! Do something about it!");
-	    return new ModelAndView("error");
-	}
+       Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+
+       log.error("Error with status code"+status+"happened");
+
+       if (status != null) {
+           Integer statusCode = Integer.valueOf(status.toString());
+
+           if(statusCode == HttpStatus.NOT_FOUND.value()) {
+               return new ModelAndView("error-404");
+           }
+           else if(statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+               return new ModelAndView("error-500");
+           }
+
+       }
+       return new ModelAndView("error");
+   }
 }
 ```
+- The `/error` endpoint is never hit, the page is
+
 <br>
+
+##### Adding Custom Error Pages For Each Status Code and a General Catch-All
+
+source: https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features
+
+
+![](assets/markdown-img-paste-20200128151041692.png)
+
+Example Using My App:
+![](assets/markdown-img-paste-20200128151240511.png)
+Notes:
+- **public directory can be called templates**
+- inside `/error` we have a mapping between error code and corresponding page to display
+- outside of `/error` we have `error.html` which is a catch-all custom page
+- `CustomController` class is not needed thanks to spring boot, we can comment it out since spring boot will handle this logic.
+
 
 # Organize Your Application Code in Three-tier Architecture
 - Our app is not that big but it has already started looking quite messy
 - Figuring out where a particular functionality lies is difficult and will get worse
 
+
+
+**Update:** it seems 500 error page is always returned.. even when i miss name the .html home to try to trigger a 404... why so?
 <br>
 
 **Widely Accepted Solution:**
@@ -893,3 +905,35 @@ public List<WatchlistItem> getWatchlistItems() {
 
 ### Java Configuration
 ![](assets/markdown-img-paste-2019123115044560.png)
+<br>
+
+##Logging
+
+##### Motivation behind logs
+- Users reported issue with watchlist app from 8pm to 9:30 pm
+- afterwards, things went back to normal
+- We want to prevent this from happening again. Was the issue the API ? the server? what was it?
+- **We would not know the answer without a detailed history of our app's inner working (Logs)**
+
+
+#### Do we need to write our own loggin framewrok?
+- We do not need to reinvent the wheel and integrate mechanism with our app
+- By adding spring web starter dependency, we get logback frameworks preconfigured
+- **We just have to add statements in our code**
+
+#### Logging things intelligently
+- not a good idea to log line by line
+- Too difficult to read logs if we do this
+- too much work
+
+#### Ultimate goal of adding logs
+- facilitate debugging prod issues
+- We want to know if a request was ever received by our backend, so good idea to put logs at the entry point (handler methods in controller class)
+- Applications are also prone to issues when external service are called, because we are dealing with a lot of things our of our control so it is good practice to log interaction with outside world **(OMDb API)**
+
+
+#### Where to Place Logs
+- **The best place to put logs is at points where exceptions happen because most app issues are related to an exception in the application**
+  1) In catch statements, place `log.error('..')` because exception occurred
+  2) In controller handler methods place `log.info('...')`
+  3) In methods/services that call external API/systems place `log.info('...')`
