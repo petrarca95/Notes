@@ -205,9 +205,16 @@ user_id IS NULL;
 
 #### Fourth Challenge
 
-![](assets/markdown-img-paste-20200112182704587.png)
 
-- Group by performs better on
+
+![](assets/markdown-img-paste-20200112182704587.png)
+- we know we probably need Users Table, Photos table and likes table
+<br>
+
+**Schema of tables:**
+![](assets/markdown-img-paste-20200308092740264.png)
+
+- Group by performs better on PK
 
 ```SQL
 
@@ -627,6 +634,148 @@ having
 ```
 <br>
 
+
+#### 8th challenge (my own)
+- find the user that has received the most likes across all photos and the total quantity of likes the user has received
+
+Analysis:
+- if we do group by on likes.user_id we can find info on the number of times each user has hit liked
+- if we do group by on likes.photo_id we can find info on the number of likes each photo has
+- we do not want either of these, we need to join to find info we are looking for
+
+```sql
+select
+  users.id,
+  username,
+  count(users.id) as total_likes
+from
+  users
+  join photos on users.id = photos.user_id
+  join likes on likes.photo_id = photos.id
+group by
+  users.id
+order by
+  total_likes desc
+limit
+  1;
+
+```
+
+result:
+
+```sql
+select   users.id,   username,   count(users.id) as total_likes from   users   join photos on users.id = photos.user_id   join likes on likes.photo_id = photos.id group by   users.id order by   total_likes desc limit   1;
++----+-----------+-------------+
+| id | username  | total_likes |
++----+-----------+-------------+
+| 23 | Eveline95 |         420 |
++----+-----------+-------------+
+1 row in set (0.01 sec)
+
+```
+
+#### 9th challenge (my own)
+- find how many photos each user has liked
+
+```sql
+```sql
+select
+  likes.user_id,
+  username,
+  count(*) as likes_by_user
+from
+  likes
+  join users on users.id = likes.user_id
+group by
+  users.id
+order by
+  likes_by_user desc;
+
++---------+-----------------------+---------------+
+| user_id | username              | likes_by_user |
++---------+-----------------------+---------------+
+|      75 | Leslie67              |           257 |
+|      21 | Rocio33               |           257 |
+|      24 | Maxwell.Halvorson     |           257 |
+|      91 | Bethany20             |           257 |
+|      36 | Ollie_Ledner37        |           257 |
+|      41 | Mckenna17             |           257 |
+|      14 | Jaclyn81              |           257 |
+|      76 | Janelle.Nikolaus81    |           257 |
+|      54 | Duane60               |           257 |
+|      57 | Julien_Schmidt        |           257 |
+|      66 | Mike.Auer39           |           257 |
+|       5 | Aniya_Hackett         |           257 |
+|      71 | Nia_Haag              |           257 |
+|      16 | Annalise.McKenzie16   |           103 |
+|      96 | Keenan.Schamberger60  |            98 |
+|      69 | Karley_Bosco          |            97 |
+|      65 | Adelle96              |            96 |
+|       2 | Andre_Purdy85         |            94 |
+|      26 | Josianne.Friesen      |            94 |
+|      13 | Alexandro35           |            93 |
+|       4 | Arely_Bogan63         |            93 |
+|      35 | Lennie_Hartmann40     |            92 |
+|      87 | Rick29                |            92 |
+|      22 | Kenneth64             |            91 |
+|      93 | Willie_Leuschke       |            91 |
+|      32 | Irwin.Larson          |            91 |
+|      92 | Frederik_Rice         |            91 |
+|      19 | Hailee26              |            90 |
+|      39 | Kelsi26               |            89 |
+|      11 | Justina.Gaylord27     |            89 |
+|      31 | Aiyana_Hoeger         |            88 |
+|      70 | Erick5                |            88 |
+|      62 | Ressie_Stanton46      |            88 |
+|      46 | Malinda_Streich       |            88 |
+|      10 | Presley_McClure       |            87 |
+|      20 | Delpha.Kihn           |            87 |
+|      42 | Maya.Farrell          |            87 |
+|      85 | Milford_Gleichner42   |            87 |
+|      44 | Seth46                |            86 |
+|      67 | Emilio_Bernier52      |            86 |
+|      95 | Nicole71              |            86 |
+|      60 | Sam52                 |            86 |
+|      73 | Jaylan.Lakin          |            86 |
+|      43 | Janet.Armstrong       |            86 |
+|      38 | Jordyn.Jacobson2      |            85 |
+|       9 | Gus93                 |            85 |
+|      72 | Kathryn80             |            85 |
+|      40 | Rafael.Hickle2        |            85 |
+|      52 | Zack_Kemmer93         |            85 |
+|      37 | Yazmin_Mills95        |            84 |
+|      94 | Damon35               |            84 |
+|      15 | Billy52               |            84 |
+|      82 | Aracely.Johnston98    |            84 |
+|      61 | Jayson65              |            83 |
+|      63 | Elenor88              |            83 |
+|      78 | Colten.Harris76       |            83 |
+|     100 | Javonte83             |            82 |
+|       6 | Travon.Waters         |            82 |
+|      18 | Odessa2               |            82 |
+|      50 | Gerard79              |            81 |
+|      56 | Peter.Stehr0          |            81 |
+|      30 | Kaley9                |            81 |
+|      27 | Darwin29              |            79 |
+|       3 | Harley_Lind18         |            79 |
+|       8 | Tabitha_Schamberger11 |            79 |
+|      17 | Norbert_Carroll35     |            78 |
+|      55 | Meggie_Doyle          |            78 |
+|      28 | Dario77               |            77 |
+|      33 | Yvette.Gottlieb91     |            77 |
+|      12 | Dereck65              |            77 |
+|      47 | Harrison.Beatty50     |            76 |
+|      84 | Alysa22               |            75 |
+|      79 | Katarina.Dibbert      |            75 |
+|      48 | Granville_Kutch       |            75 |
+|      98 | Imani_Nicolas17       |            74 |
+|      99 | Alek_Watsica          |            74 |
+|      97 | Tomas.Beatty93        |            69 |
++---------+-----------------------+---------------+
+77 rows in set (0.00 sec)
+```
+
+
 #### Sub Queries and Derived Tables
 
 source: https://www.geeksforgeeks.org/sql-sub-queries/
@@ -634,6 +783,9 @@ source: https://www.geeksforgeeks.org/sql-sub-queries/
 - A query within another query
 - Can be used in `WHERE`, `HAVING`, `SELECT`, `FROM`, `DELETE`, `UPDATE`, along with expression operators
 - Subquery generally executes first
+
+
+
 
 <br>
 
