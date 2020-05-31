@@ -10,12 +10,14 @@ Now we will talk about how data is related and how to implement those relations 
 
 #### Real World Data
 - is messy
-- if we have a simple blog site there are a lot to store
+- it is interrelated
+- if we have a simple blog site there are is a lot to store
   - Users
   - Blogs
   - Comments
-- We will see how to work with interrelated data
+- We will see how to work with interrelated data, related data, in the next couple of sections
 
+<br>
 
 **Lets talk about books! What if we had a library website?**
 - we would need to have the following tables
@@ -25,18 +27,21 @@ Now we will talk about how data is related and how to implement those relations 
 ![](assets/markdown-img-paste-20191223190418665.png)
 
 - in a typical app like a book store, we would need a bunch of tables
+- A book may have many authors, right now we are not dealing with that, we only have the ability to store one author in our books table
 - Orders may need to be split into various tables
 
 
 
 # Types of relationships
-- how do we represent complex data using Relational DBs and SQL
+- how do we represent complex data using Relational DBs and SQL? where do we start?
 - How are Entities (Nouns) related?
+  - Example, how are authors and books related?
 
 
 #### 1:1 Relationship
 Ex:
-- One customer has one row in the customer_details tables abd one customer_details is associated with one Customer (row) in the Customers table
+- One customer has one row in the customer_details tables and one customer_details is associated with one Customer (row) in the Customers table
+  - Our customer has basic info in tables and Customer_details has more info
 - a customer_details table and a customer table
 - instead of having a customer table with a bunch of columns, the data was broken up in two tables
 - Customer table contained data used often
@@ -60,6 +65,8 @@ Ex:
 
 ## 1:n Basics, The most Common Relationship
 - lets start with an example, Customers and Orders (two tables)
+- a Customer can submit many orders and an order is associated with one and only one customer
+- This is a 1:n relationship
 
 
 ![](assets/markdown-img-paste-20191223191523974.png)
@@ -69,13 +76,13 @@ Ex:
 
 <br>
 
-**A possible way: one giant table(Awful idea)**
+**A possible way: one giant table (Awful idea)**
 ![](assets/markdown-img-paste-20191223191706736.png)
 - the big table does capture everything But....
 1. A lot of repeated Data for first, last name, and email because they have placed multiple orders
 2. The last two haven't placed orders, if they have never placed, then there is no need to have any order info if they have not placed any orders
    - There are many times actions are done that do not require some information stored in table
-   - Here, David logs in, there is no need to go through a table with a bunch of null values if all we need is log in info
+   - Here, David logs in, there is no need to go through a table with a bunch of null values if all we need is log in info from DB for authentication
 
 <br>
 
@@ -1264,6 +1271,65 @@ mysql>
 
 ```
 
+
+Why do we get an error?, because reviewer_id has a null, since it is a FK that refereces reviewer and ties him to a review, but since this reviewer has not submitted any reviews, there is no entry for him in reviews.reviewer_id
+
+```SQL
++----+------------+-----------+------+--------+-----------+-------------+
+| id | first_name | last_name | id   | rating | series_id | reviewer_id |
++----+------------+-----------+------+--------+-----------+-------------+
+|  1 | Thomas     | Stoneman  |    1 |    8.0 |         1 |           1 |
+|  1 | Thomas     | Stoneman  |    6 |    8.1 |         2 |           1 |
+|  1 | Thomas     | Stoneman  |   11 |    7.0 |         3 |           1 |
+|  1 | Thomas     | Stoneman  |   16 |    7.5 |         4 |           1 |
+|  1 | Thomas     | Stoneman  |   21 |    9.5 |         5 |           1 |
+|  2 | Wyatt      | Skaggs    |    2 |    7.5 |         1 |           2 |
+|  2 | Wyatt      | Skaggs    |   19 |    7.6 |         4 |           2 |
+|  2 | Wyatt      | Skaggs    |   24 |    9.3 |         5 |           2 |
+|  2 | Wyatt      | Skaggs    |   26 |    6.5 |         6 |           2 |
+|  2 | Wyatt      | Skaggs    |   29 |    8.4 |         6 |           2 |
+|  2 | Wyatt      | Skaggs    |   31 |    9.1 |         7 |           2 |
+|  2 | Wyatt      | Skaggs    |   34 |    7.8 |         8 |           2 |
+|  2 | Wyatt      | Skaggs    |   37 |    5.5 |         9 |           2 |
+|  2 | Wyatt      | Skaggs    |   45 |    8.5 |        14 |           2 |
+|  3 | Kimbra     | Masters   |    3 |    8.5 |         1 |           3 |
+|  3 | Kimbra     | Masters   |    8 |    8.0 |         2 |           3 |
+|  3 | Kimbra     | Masters   |   14 |    7.1 |         3 |           3 |
+|  3 | Kimbra     | Masters   |   17 |    7.8 |         4 |           3 |
+|  3 | Kimbra     | Masters   |   22 |    9.0 |         5 |           3 |
+|  3 | Kimbra     | Masters   |   27 |    7.8 |         6 |           3 |
+|  3 | Kimbra     | Masters   |   38 |    6.8 |         9 |           3 |
+|  3 | Kimbra     | Masters   |   43 |    8.0 |        13 |           3 |
+|  3 | Kimbra     | Masters   |   46 |    8.9 |        14 |           3 |
+|  4 | Domingo    | Cortes    |    4 |    7.7 |         1 |           4 |
+|  4 | Domingo    | Cortes    |    7 |    6.0 |         2 |           4 |
+|  4 | Domingo    | Cortes    |   13 |    8.0 |         3 |           4 |
+|  4 | Domingo    | Cortes    |   18 |    8.3 |         4 |           4 |
+|  4 | Domingo    | Cortes    |   23 |    9.1 |         5 |           4 |
+|  4 | Domingo    | Cortes    |   28 |    8.8 |         6 |           4 |
+|  4 | Domingo    | Cortes    |   33 |    8.5 |         8 |           4 |
+|  4 | Domingo    | Cortes    |   39 |    5.8 |         9 |           4 |
+|  4 | Domingo    | Cortes    |   44 |    7.2 |        13 |           4 |
+|  4 | Domingo    | Cortes    |   47 |    8.9 |        14 |           4 |
+|  5 | Colt       | Steele    |    5 |    8.9 |         1 |           5 |
+|  5 | Colt       | Steele    |   10 |    9.9 |         2 |           5 |
+|  5 | Colt       | Steele    |   15 |    8.0 |         3 |           5 |
+|  5 | Colt       | Steele    |   20 |    8.5 |         4 |           5 |
+|  5 | Colt       | Steele    |   25 |    9.9 |         5 |           5 |
+|  5 | Colt       | Steele    |   30 |    9.1 |         6 |           5 |
+|  5 | Colt       | Steele    |   32 |    9.7 |         7 |           5 |
+|  5 | Colt       | Steele    |   36 |    9.3 |         8 |           5 |
+|  5 | Colt       | Steele    |   41 |    4.5 |         9 |           5 |
+|  5 | Colt       | Steele    |   42 |    9.9 |        10 |           5 |
+|  6 | Pinkie     | Petit     |    9 |    8.4 |         2 |           6 |
+|  6 | Pinkie     | Petit     |   12 |    7.5 |         3 |           6 |
+|  6 | Pinkie     | Petit     |   35 |    8.8 |         8 |           6 |
+|  6 | Pinkie     | Petit     |   40 |    4.3 |         9 |           6 |
+|  7 | Marlon     | Crafford  | NULL |   NULL |      NULL |        NULL |
+
+```
+
+
 Correct (grouping by reviewers.id instead)
 
 ```SQL
@@ -1302,9 +1368,234 @@ from
 ## Group By
 - Used to condense groups into one and perform aggregate functions (AVG, SUM, MIN) on attributes that belong to these groups
 - Always group by column that is the primary key like reviewers.id above (Primary Key)
-- Select clause can only contain aggregate functions performed on a column, for example, AVG(Rating), and columns that are functionally dependent on the column in the group by clause
+- Select clause can only contain **aggregate functions performed on a column**, for example, AVG(Rating), and **columns that are functionally dependent on the column in the group by clause**
   - Ex: first name is functionally dependent on reviewer.id, papers.title is not
   - If we condense all reviews into groups with unique id (group by reviewer.id) then it makes sense for us to be able to select first_name since first_name depends on reviewer.id but not the title of the paper/papers submitted by reviewers
 
 ![](assets/markdown-img-paste-20191231114803982.png)
-- reviewers.id uniquely determines reviewers.first_name but does not uniquely determine papers.title since a reviewer defined by (reviewer.id) can have multiple papers with various titles
+- reviewers.id uniquely determines reviewers.first_name but does not uniquely determine series.title since a reviewer defined by (reviewer.id) can review multiple movies so X does not uniquely determine Y
+
+- In simple english, a reviewer id, lets say 1, points to exactly one first and/or last name. This means first and/or last name are functionally dependent on reviewers.id
+- a reviewer id, lets say 1, can point to more than one series.title, therefore X does not uniquely determine Y (Y is not functionally dependent on X)
+- **X can still be functionally dependent on Y even if Different Xs (photos.id) point to the same Y (username)**
+- What we can't have is an X (photos.id) pointing to different Ys (usernames)
+
+
+
+**Concrete Example:**
+```SQL
+mysql> select * from users join photos on users.id = photos.user_id join likes on photos.id = likes.photo_id limit 200;
++----+---------------+---------------------+----+----------------------+---------+---------------------+---------+----------+---------------------+
+| id | username      | created_at          | id | image_url            | user_id | created_at          | user_id | photo_id | created_at          |
++----+---------------+---------------------+----+----------------------+---------+---------------------+---------+----------+---------------------+
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |       2 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |       5 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |       9 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      10 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      11 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      14 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      19 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      21 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      24 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      35 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      36 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      41 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      46 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      47 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      54 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      55 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      57 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      66 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      69 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      71 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      75 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      76 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      78 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      82 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  1 | http://elijah.biz    |       1 | 2020-01-12 13:28:31 |      91 |        1 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |       3 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |       5 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |       6 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |       8 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      14 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      17 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      19 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      21 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      24 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      26 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      27 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      30 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      31 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      33 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      36 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      38 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      40 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      41 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      44 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      52 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      54 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      56 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      57 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      62 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      63 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      66 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      71 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      75 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      76 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      82 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      87 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      91 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      92 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      94 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      95 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  2 | https://shanon.org   |       1 | 2020-01-12 13:28:31 |      96 |        2 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |       4 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |       5 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      12 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      14 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      15 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      20 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      21 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      24 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      27 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      28 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      33 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      36 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      37 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      41 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      42 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      43 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      44 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      46 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      50 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      52 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      54 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      57 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      60 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      61 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      65 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      66 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      69 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      70 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      71 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      75 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      76 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      82 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      87 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      91 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      93 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      95 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |      99 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  3 | http://vicky.biz     |       1 | 2020-01-12 13:28:31 |     100 |        3 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |       2 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |       4 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |       5 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      10 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      11 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      12 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      13 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      14 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      15 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      17 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      20 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      21 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      24 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      28 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      31 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      36 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      41 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      43 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      46 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      52 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      54 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      56 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      57 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      62 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      66 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      70 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      71 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      72 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      75 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      76 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      78 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      84 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      85 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      87 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      91 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      92 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      96 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  4 | http://oleta.net     |       1 | 2020-01-12 13:28:31 |      99 |        4 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |       4 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |       5 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |       6 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      11 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      14 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      17 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      21 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      24 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      26 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      28 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      32 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      33 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      36 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      37 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      41 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      42 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      43 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      44 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      47 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      54 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      55 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      57 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      66 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      71 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      75 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      76 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      78 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      82 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      91 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      92 |        5 | 2020-01-12 13:28:31 |
+|  1 | Kenton_Kirlin | 2017-02-16 18:22:11 |  5 | https://jennings.biz |       1 | 2020-01-12 13:28:31 |      99 |        5 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |       4 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |       5 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      14 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      16 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      19 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      21 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      24 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      27 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      30 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      31 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      32 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      36 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      38 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      41 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      43 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      46 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      54 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      57 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      61 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      62 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      66 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      69 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      71 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      75 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      76 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      85 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      87 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      91 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      93 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |      94 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  6 | https://quinn.biz    |       2 | 2020-01-12 13:28:31 |     100 |        6 | 2020-01-12 13:28:31 |
+|  2 | Andre_Purdy85 | 2017-04-02 17:11:21 |  7 | https://selina.name  |       2 | 2020-01-12 13:28:31 |       3 |        7 | 2020-01-12 13:28:31 |
++----+---------------+---------------------+----+----------------------+---------+---------------------+---------+----------+---------------------+
+200 rows in set (0.00 sec)
+
+```
+- notice how photos_id (or photos.id) X, point to the same username many times, because for example, user 1 has many photos
+- BUT EACH PHOTO IS TIED TO A SPECIFIC USERNAME AND USER ID, thus username and user id are functionally dependent on photos.id and we can include the two functionally dependent columns in the select clause
+
+
+  - so, for example, Y (username) can still be functionally dependent on X (photos.id) even if there are multiple photo ids that point to the same user.
+
+Read more: https://dzone.com/articles/sql-group-by-and-functional-dependencies-a-very-us

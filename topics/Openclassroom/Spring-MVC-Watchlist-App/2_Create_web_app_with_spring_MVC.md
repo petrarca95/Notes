@@ -893,7 +893,7 @@ public List<WatchlistItem> getWatchlistItems() {
 ![](assets/markdown-img-paste-20191231145934607.png)
 
 
-## Configure Your Spring Beans via XML and Java
+## Configure Your Spring Beans via XML, Java, and Annotations
 
 ![](assets/markdown-img-paste-20191231150115316.png)
 
@@ -907,7 +907,14 @@ public List<WatchlistItem> getWatchlistItems() {
 ![](assets/markdown-img-paste-2019123115044560.png)
 <br>
 
-##Logging
+
+# Manage a Production environment with spring boot
+
+<br>
+
+## Logging
+
+<br>
 
 ##### Motivation behind logs
 - Users reported issue with watchlist app from 8pm to 9:30 pm
@@ -915,25 +922,296 @@ public List<WatchlistItem> getWatchlistItems() {
 - We want to prevent this from happening again. Was the issue the API ? the server? what was it?
 - **We would not know the answer without a detailed history of our app's inner working (Logs)**
 
+<br>
 
 #### Do we need to write our own loggin framewrok?
 - We do not need to reinvent the wheel and integrate mechanism with our app
 - By adding spring web starter dependency, we get logback frameworks preconfigured
 - **We just have to add statements in our code**
 
+<br>
+
 #### Logging things intelligently
 - not a good idea to log line by line
 - Too difficult to read logs if we do this
 - too much work
+
+<br>
 
 #### Ultimate goal of adding logs
 - facilitate debugging prod issues
 - We want to know if a request was ever received by our backend, so good idea to put logs at the entry point (handler methods in controller class)
 - Applications are also prone to issues when external service are called, because we are dealing with a lot of things our of our control so it is good practice to log interaction with outside world **(OMDb API)**
 
+<br>
 
 #### Where to Place Logs
 - **The best place to put logs is at points where exceptions happen because most app issues are related to an exception in the application**
   1) In catch statements, place `log.error('..')` because exception occurred
   2) In controller handler methods place `log.info('...')`
   3) In methods/services that call external API/systems place `log.info('...')`
+<br>
+
+#### Understanding Log Levels
+- The lower you set log levels the more logs will be generated
+- setting log level to `INFO` means app will show logs logged with `log.error`, `log.warn`, and `log.info`
+![](assets/markdown-img-paste-20200229222424477.png)
+- in dev and test we want to see more logs, so level would be set lower
+<br>
+
+#### Changing Log Levels
+
+![](assets/markdown-img-paste-20200229223116825.png)
+<br>
+
+#### Use the right logging method
+
+![](assets/markdown-img-paste-20200229223201906.png)
+
+<br>
+
+#### Writing Logs to a file
+
+![](assets/markdown-img-paste-20200229223258283.png)
+
+<br>
+
+## Get Started With Spring Boot Actuator
+- Our App is ready to be deployed in Prod and enjoyed by many users
+- The more users we have, the more sophisticated our production environment should be **to cope with the load of user requests**
+
+<br>
+
+###Techniques
+<br>
+
+1) **Clustering**
+- deploying the app in multiple servers and dividing load b/w them
+
+2) **Spring Boot Actuators**
+
+
+![](assets/markdown-img-paste-20200130173325308.png)
+
+<br>
+
+### Need for Spring Boot Actuator
+- at this point in enterprise apps, people who create a list of movies won't be the only users
+
+1) **System admins or DevOps engineers:** usually responsible for designing and managing production environments
+- For them to do their job, they need to be able to communicate with app and get some information about how it's running, and if any special attention is needed
+- We can give DevOps engineers this info using a set of features called **Spring Boot Actuator**
+
+### Spring Boot Actuator Features
+https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-enabling
+
+1) **Endpoints**
+
+![](assets/markdown-img-paste-20200130182715840.png)
+
+2) **Metrics**
+
+
+![](assets/markdown-img-paste-20200130182728237.png)
+
+3) **Audit**
+
+![](assets/markdown-img-paste-20200130182738822.png)
+
+
+### Enabling Actuator
+- add maven dependency to `POM`
+
+```XML
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+</dependencies>
+```
+
+![](assets/markdown-img-paste-20200130175155470.png)
+- the actuator endpoints allow us to monitor and communicate with the app
+- spring boot provides a number of built in actuator endpoints seen above
+- `actuator/info` and `actuator/health` are exposed/enabled by default
+
+
+### Adding Custom Info
+- `actuator/info` endpoint is a way to ask app who are you?
+![](assets/markdown-img-paste-20200130185404656.png)
+
+![](assets/markdown-img-paste-20200130185446612.png)
+
+### Implement a custom health indicator
+
+additional source: https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html
+
+- `actuator/health` endpoint is a way to ask app, how are you?
+- We define what makes an app healthy or not
+- A web server could be up but not healthy enough to serve incoming requests (lacking memory or disk space, unavailable external services or dbs, etc)
+
+![](assets/markdown-img-paste-20200130185949120.png)
+
+![](assets/markdown-img-paste-20200130200218639.png)
+- lets check that our MovieRatingService is up as a sign of application health
+- **remeber, we can define any various things as a sign of health of our application**
+- In our `MovieRatingServiceLiveImpl` we catch any exception, log error, and return null if API is not working or an exception occurs during API calling service (method)
+- Below, we call service and pass the title of the movie "Up" if we get null, we know an exception occurred because of how we defined the `getMovieRating()` method, which returns null if an exception occurs
+```Java
+package com.openclassrooms.watchlist.actuator;
+import com.openclassrooms.watchlist.service.MovieRatingService;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+
+
+//@Component not needed since we define class as bean in AppConfig.java
+public class MovieRatingServiceHealthChecker implements HealthIndicator {
+
+    private MovieRatingService movieRatingServiceImpl;
+
+//    @Autowired
+    public MovieRatingServiceHealthChecker(MovieRatingService movieRatingService){
+        this.movieRatingServiceImpl = movieRatingService;
+    }
+
+    @Override
+    public Health health() {
+
+        if(movieRatingServiceImpl.getMovieRating("Up")==null){
+            return Health.down().withDetail("cause","OMDb API is down").build();
+        }
+
+        return Health.up().build();
+    }
+}
+```
+
+
+### Enabling more built in endpoints
+- previously we saw how to use and enhance (add info to `/info` and add custom health checker to `/health`) these two built in endpoints
+- these are useful to ask app "how are you?" and "who are you?"
+- spring boot actuator comes with additional endpoints we can use for various purposes
+
+#### Exposing /beans
+
+![](assets/markdown-img-paste-20200229124927278.png)
+
+- lets see how we can expose the more common ones
+
+
+![](assets/markdown-img-paste-20200229125040240.png)
+
+![](assets/markdown-img-paste-20200229172930977.png)
+- we can then put this json response to a json beautifier to get the beans into a more readable format
+
+<br>
+
+**Note: the IntelliJ spring -> beans tab does not show beans registered in the container (I confirmed by seeing beans that had the conditional @Profile tag that appear there but not in the response the `/beans` endpoint)**
+
+<br>
+
+- These are not the beans that were registered, these are the bean definitions, I know this because prod is active and if we hit `/beans` we will see `watchListServiceProd.java` be listed as a registered bean but `watchListServiceDev` won't appear
+![](assets/markdown-img-paste-20200229173528286.png)
+
+
+
+![](assets/markdown-img-paste-20200229174718135.png)
+- from the wording in the image above and by realizing that when prod is active, only the bean `watchListServiceProd.java` appears as a bean, we can deduce that the green bean icon with the check mark means "this bean (the one with the check mark) is registered and injected into WatchlistController and depends on MovieRatingServiceLive and watchlistitemRepository"
+
+<br>
+
+
+**Navigate to Autowired Candidates**
+![](assets/markdown-img-paste-2020022918033310.png)
+-  if there is a class that has a dependency of the type that matches the bean and the dependency is tagged with @Autowired (annotation based DI is used as opposed to XML or java config), then clicking this icon will take to where this bean will be injected with @Autowired, it does not necessarily mean this specific mean will be injected, but it is a candidate for autowired. Here, that depends on active profile, but it is an autowired candidate whether it is injected or not )
+- here we use @Autowire to inject a `WatchlistService` implementation into `WatchlistCOntorller`
+
+![](assets/markdown-img-paste-2020022918165658.png)
+
+- if we get rid of @Autowired and perform DI with java using setter or constructor in a @Configuration file, then the icon will display the message below
+- the icon above only appears when @Autowired is used to perform DI, clicking icon will produce a drop down list of the **candidates** not necessarily the specific implementations that will be injected. only the possible candidates.
+
+![](assets/markdown-img-paste-20200229180907271.png)
+
+Discussion of the above: https://www.reddit.com/r/learnjava/comments/fbjsuo/both_conditional_java_beans_prod_and_dev_are/
+
+<br>
+
+#### Exposing /env
+
+- allows us to see where all the properties of our app came from
+- example, what properties came from application.ynl, what came from OS PATH variable, what came from application.properties file
+
+![](assets/markdown-img-paste-20200229212723877.png)
+
+
+
+![](assets/markdown-img-paste-20200229214511172.png)
+<br>
+
+#### Exposing /metrics
+- hit `/actuator/metrics`
+- use the values in the response and append to endpoint
+- This is called a **navigable endpoint**
+
+![](assets/markdown-img-paste-20200229221843803.png)
+- example: `/actuator/metrics/jvm.threads.live`
+
+<br>
+
+#### Exposing /httptrace
+
+![](assets/markdown-img-paste-20200229222146143.png)
+![](assets/markdown-img-paste-20200229222132718.png)
+
+
+### Create custom Actuator endpoints
+- we can customize and enrich existing endpoints as well as creating completely new ones
+
+
+#### Create a `/release-notes` endpoint
+- release notes is a document that details all new features and bugs fixed for this version
+- overall process is similar to creating an MVC controller method
+
+**Process:**
+1. Create a class with a specific method
+2. annotate method which will return the actual response content
+
+```java
+package com.openclassrooms.watchlist.actuator;
+
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.stereotype.Component;
+
+@Component
+@Endpoint(id="release-notes")
+public class ReleaseNotesEndpoint {
+
+	String version10 = "** Version 1.0 ** \n\n"
+			+ "* Homepage added \n"
+			+ "* Item creation form added \n"
+			+ "* View the watchlsit page added \n";
+
+	@ReadOperation
+	public String releaseNotes() {
+
+		return version10;
+	}
+}
+```
+
+3. expose endpoint in properties file
+
+`management.endpoints.web.exposure.include=info,health,beans,env,metrics,httptrace,release-notes`
+
+<br>
+
+
+#### Make `/release-notes` Navigable
+- a navigable endpoint is one like `/metrics` where these endpoints provide possibilities that can be appended to the path of the endpoint
+- this is done when we have a lot of info and we want to ourselves get more info about specific sections
+
+
+![](assets/markdown-img-paste-20200301092337370.png)

@@ -125,3 +125,12 @@ public List<Employee> getAllEmployees(){
 2. checks to see the JdbcTemplate's query method, sees that one of the implementations accepts RowMapper<T> type, which has an abstract method which returns an object of type T, Employee type in this case, and whose aparameters (abstract method's parameters) are of type ResultSet and int
 3. checks to see lambda returns an Employee type and has two parameters (does type inference on argument list)
 4. If conditions in 3 are met, lambda is matched to the abstract method in the FI
+
+<br>
+
+
+**In other words:**
+
+source:
+https://stackabuse.com/lambda-expressions-in-java/
+![](assets/markdown-img-paste-20200305205940233.png)

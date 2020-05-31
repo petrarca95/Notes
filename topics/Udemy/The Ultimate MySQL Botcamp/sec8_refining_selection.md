@@ -308,7 +308,190 @@ where author_fname like '%da%';
 - read as select title and author first name from books where author first name has anything - da - anything
 - `WHERE author_lname LIKE 'Dave' ` is the same as `WHERE author_lname ='Dave'`
 
+<br>
 
-another example:
+**Another example:**
 ![](assets/markdown-img-paste-20200119150850792.png)
 - searching reddit uses like, we dont want to retrieve anything exact
+
+<br>
+
+**Another example:**
+- I want to select books where stock quantity is 4 characters long
+- underscore is a way to specify exactly one character
+![](assets/markdown-img-paste-20200301165623643.png)
+![](assets/markdown-img-paste-20200301165728688.png)
+
+<br>
+
+![](assets/markdown-img-paste-20200301165805433.png)
+- we use an escape character
+
+![](assets/markdown-img-paste-20200301165848196.png)
+
+![](assets/markdown-img-paste-20200301170031194.png)
+
+```java
+
+mysql> select title from books where title like '%\_%'
+    -> ;
++-----------+
+| title     |
++-----------+
+| fake_book |
++-----------+
+
+```
+
+<br>
+
+### Refining Selection Exercises
+**Example 1:**
+![](assets/markdown-img-paste-20200301170534860.png)
+
+
+```sql
+mysql> select title from books where title like '%stories%';
++-----------------------------------------------------+
+| title                                               |
++-----------------------------------------------------+
+| What We Talk About When We Talk About Love: Stories |
+| Where I'm Calling From: Selected Stories            |
+| Oblivion: Stories                                   |
+
+```
+
+<br>
+
+**Example 2:**
+![](assets/markdown-img-paste-20200301170733925.png)
+
+
+```sql
+mysql> select title, pages from books where pages =(select MAX(pages) from books);
++-------------------------------------------+-------+
+| title                                     | pages |
++-------------------------------------------+-------+
+| The Amazing Adventures of Kavalier & Clay |   634 |
++-------------------------------------------+-------+
+1 row in set (0.00 sec)
+
+```
+
+
+<br>
+
+**Example 3:**
+![](assets/markdown-img-paste-20200301171622760.png)
+
+
+```sql
+mysql> select concat(title, ' - ', released_year) as summary  from books order by released_year desc limit 3;
++-----------------------------+
+| summary                     |
++-----------------------------+
+| Lincoln In The Bardo - 2017 |
+| Norse Mythology - 2016      |
+| 10% Happier - 2014          |
++-----------------------------+
+3 rows in set (0.00 sec)
+
+```
+<br>
+
+**Example:**
+
+![](assets/markdown-img-paste-20200301182741480.png)
+
+```sql
+select title, author_lname from books where author_lname like '%; %'
+```
+<br>
+
+**Example 4:**
+
+
+![](assets/markdown-img-paste-20200301172620164.png)
+
+```sql
+mysql> select title, released_year, stock_quantity from books order by stock_quantity asc limit 3;
++-----------------------------------------------------+---------------+----------------+
+| title                                               | released_year | stock_quantity |
++-----------------------------------------------------+---------------+----------------+
+| Where I'm Calling From: Selected Stories            |          1989 |             12 |
+| American Gods                                       |          2001 |             12 |
+| What We Talk About When We Talk About Love: Stories |          1981 |             23 |
++-----------------------------------------------------+---------------+----------------+
+
+```
+
+<br>
+
+**Example 5:**
+
+![](assets/markdown-img-paste-20200301172921267.png)
+
+
+```sql
+
+mysql> select title, author_lname from books order by author_lname, title;
++-----------------------------------------------------+----------------+
+| title                                               | author_lname   |
++-----------------------------------------------------+----------------+
+| What We Talk About When We Talk About Love: Stories | Carver         |
+| Where I'm Calling From: Selected Stories            | Carver         |
+| The Amazing Adventures of Kavalier & Clay           | Chabon         |
+| White Noise                                         | DeLillo        |
+| A Heartbreaking Work of Staggering Genius           | Eggers         |
+| A Hologram for the King: A Novel                    | Eggers         |
+| The Circle                                          | Eggers         |
+| Consider the Lobster                                | Foster Wallace |
+| Oblivion: Stories                                   | Foster Wallace |
+| American Gods                                       | Gaiman         |
+| Coraline                                            | Gaiman         |
+| Norse Mythology                                     | Gaiman         |
+| 10% Happier                                         | Harris         |
+| fake_book                                           | Harris         |
+| Interpreter of Maladies                             | Lahiri         |
+| The Namesake                                        | Lahiri         |
+| Lincoln In The Bardo                                | Saunders       |
+| Just Kids                                           | Smith          |
+| Cannery Row                                         | Steinbeck      |
++-----------------------------------------------------+----------------+
+19 rows in set (0.00 sec)
+
+```
+<br>
+
+**Example 6:**
+
+![](assets/markdown-img-paste-20200301173248727.png)
+
+```sql
+mysql> select concat('MY FAVORITE AUTHOR IS  ',UPPER(author_fname),' ',UPPER( author_lname), '!') as yell from books order by author_lname;
++----------------------------------------------+
+| yell                                         |
++----------------------------------------------+
+| MY FAVORITE AUTHOR IS  RAYMOND CARVER!       |
+| MY FAVORITE AUTHOR IS  RAYMOND CARVER!       |
+| MY FAVORITE AUTHOR IS  MICHAEL CHABON!       |
+| MY FAVORITE AUTHOR IS  DON DELILLO!          |
+| MY FAVORITE AUTHOR IS  DAVE EGGERS!          |
+| MY FAVORITE AUTHOR IS  DAVE EGGERS!          |
+| MY FAVORITE AUTHOR IS  DAVE EGGERS!          |
+| MY FAVORITE AUTHOR IS  DAVID FOSTER WALLACE! |
+| MY FAVORITE AUTHOR IS  DAVID FOSTER WALLACE! |
+| MY FAVORITE AUTHOR IS  NEIL GAIMAN!          |
+| MY FAVORITE AUTHOR IS  NEIL GAIMAN!          |
+| MY FAVORITE AUTHOR IS  NEIL GAIMAN!          |
+| MY FAVORITE AUTHOR IS  DAN HARRIS!           |
+| MY FAVORITE AUTHOR IS  FREIDA HARRIS!        |
+| MY FAVORITE AUTHOR IS  JHUMPA LAHIRI!        |
+| MY FAVORITE AUTHOR IS  JHUMPA LAHIRI!        |
+| MY FAVORITE AUTHOR IS  GEORGE SAUNDERS!      |
+| MY FAVORITE AUTHOR IS  PATTI SMITH!          |
+| MY FAVORITE AUTHOR IS  JOHN STEINBECK!       |
++----------------------------------------------+
+19 rows in set (0.00 sec)
+
+```
